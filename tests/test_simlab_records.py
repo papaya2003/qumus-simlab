@@ -184,3 +184,43 @@ def test_remote_listener_refuses_local_only_even_from_loopback(lab):
     r = remote.post("/api/command", json={"action": "jog", "device": "arm_right",
                                           "axis": "x", "mm": 0.1}, headers=H)
     assert r.status_code == 403
+
+
+def test_save_point_and_resume_keep_the_lab_and_its_picture_ids(tmp_path):
+    from qumus_simlab.simlab.server import build_side
+
+    side = build_side(tmp_path / "a" / "qumus.db", 3)
+    mods = build_modules(side)
+    records = next(iter(mods.values())).records
+    app = create_app(mods["stacking"].service, loopback_hosts=frozenset({"testclient"}),
+                     extra=sim_routes(side, records, side.info))
+    c = TestClient(app)
+    pic = records.image_dir / "camera" / "old.png"
+    pic.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (4, 4), "gray").save(pic)
+    side.store.upsert_sample("flake_old", "flake", location="chip_001",
+                             props={"images": {"20x": str(pic)}})
+    r = c.post("/api/sim/checkpoint", json={"dir": str(tmp_path / "cp"), "label": "test"})
+    assert r.status_code == 200, r.text
+    head = r.json()["records_head"]
+    remote = TestClient(create_app(mods["stacking"].service, loopback_hosts=frozenset(),
+                                   extra=sim_routes(side, records, side.info)))
+    assert remote.post("/api/sim/checkpoint", json={"dir": str(tmp_path / "x")}).status_code == 403
+    for m in mods.values():
+        m.service.close()
+    side.jobs.shutdown(10)
+
+    side2 = build_side(tmp_path / "b" / "qumus.db", None, resume=tmp_path / "cp")
+    assert side2.info["seed"] == 3
+    mods2 = build_modules(side2)
+    rec2 = next(iter(mods2.values())).records
+    assert rec2.lab_id == records.lab_id  # same lab: a client continues from its cursor
+    assert side2.store.get_sample("flake_old")["props"]["images"]["20x"] == str(pic)
+    page = rec2.changes(head, 2000)
+    assert all(ch["seq"] > head for ch in page["changes"])
+    row = rec2._row("sample", "flake_old")
+    assert rec2.scrub(row)["props"]["images"]["20x"] == IMAGE_PREFIX + "camera/old.png"
+    assert rec2.image_path("camera/old.png") == pic.resolve()
+    for m in mods2.values():
+        m.service.close()
+    side2.jobs.shutdown(10)

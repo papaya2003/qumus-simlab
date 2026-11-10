@@ -158,7 +158,7 @@ def save_checkpoint(services: Any, dest: Path, *, label: str = "", extra: dict[s
             "last_event_id": last_id,
             "timeline_bytes": timeline.stat().st_size if timeline.exists() else 0, "sim_time": sim_now, "saved_wall": time.time(),
             "saved_at": time.strftime("%Y-%m-%d %H:%M:%S %Z"), "git_commit": _git_commit(),
-            "agents": getattr(services.runtime, "mode", None),
+            "agents": getattr(getattr(services, "runtime", None), "mode", None),
             "guarded": guarded_fingerprint(), **(extra or {})}
     (tmp / "checkpoint.json").write_text(json.dumps(meta, indent=1, default=str))
     if dest.exists():

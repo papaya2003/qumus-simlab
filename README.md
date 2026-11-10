@@ -38,13 +38,29 @@ reactor      http://127.0.0.1:8783/api/describe
 | Agent runs on | Start the sim lab with | Agent's station URLs |
 | --- | --- | --- |
 | the same computer | (defaults) | `http://127.0.0.1:8781/` … `8783` |
-| another computer, SSH tunnel (recommended) | `--remote-ports` | the tunnel end, forwarded to `127.0.0.1:18781` … `18783` |
+| another computer, SSH tunnel (recommended) | `--remote-ports` | the tunnel end, forwarded to `127.0.0.1:28781` … `28783` |
 | another computer, direct LAN | `--host 0.0.0.0` (or the LAN address) | `http://<this computer>:8781/` … |
 
-The remote listeners (`--remote-ports`, 18781–18783) treat every request as coming from
+The remote listeners (`--remote-ports`, 28781–28783) treat every request as coming from
 another computer, so an SSH tunnel, which looks like loopback, still cannot call the
 local-only actions (`jog`, raw `set_switch`, `unlock`, fault injection). Those stay on the
 lab computer itself, as in qumus-lab.
+
+### Save points (faster debugging)
+
+`POST /api/sim/checkpoint {"dir": "<folder>", "label": "..."}` (local only; refused with 409
+while a job is open) saves the run store and the whole simulated world. Start again from it
+with
+
+```sh
+.venv/bin/python -m qumus_simlab serve --resume <folder> --db runs/<new folder>/qumus.db
+```
+
+The seed and target bundle come from the save point. The resumed lab keeps the same
+`lab_id` and record sequence, and the earlier workspace's pictures keep their image ids
+(keep that workspace). The agent saves its own store at the same moment and resumes it
+with its record cursor. A save point refuses to load when a file that decides the search
+changed (`--accept-changed <file>` only for a change proven not to alter it).
 
 ## The three windows
 

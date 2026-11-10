@@ -83,10 +83,13 @@ through the feed. `project` may be one object or a list.
   with every new frame; 404 unknown camera)
 - `GET /api/sim/faults` → the fault menu; `POST /api/sim/faults {fault, params}` → inject
   (local only).
+- `POST /api/sim/checkpoint {dir, label}` → `{ok, dir, lab_id, records_head}` (local only;
+  409 while a job is open). `serve --resume <dir> --db <new folder>/qumus.db` starts from it
+  with the same `lab_id`; the agent continues its feed from `records_head`.
 
 ## Same computer / another computer
 
 - Default bind 127.0.0.1. `--host 0.0.0.0` (or a LAN address) for a direct connection.
-- `--remote-ports`: loopback listeners 18781/18782/18783 where every request counts as
+- `--remote-ports`: loopback listeners 28781/28782/28783 where every request counts as
   remote: the end of an SSH tunnel. Local-only actions (`jog`, `set_switch`, `unlock`,
   `POST /api/sim/faults`) are refused there and from any non-loopback address.

@@ -32,6 +32,8 @@ class LabSide:
     jobs: ThreadJobService
     #: where the testbench writes camera pictures (None: pictures are not kept)
     image_dir: Path | None = None
+    #: picture folders of the workspaces a resumed lab came from (save points)
+    image_roots: tuple[Path, ...] = ()
 
 
 def build_lab_side(db_path: str | Path = ":memory:", *, seed: int | None = None,

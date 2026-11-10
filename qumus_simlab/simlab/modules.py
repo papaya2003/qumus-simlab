@@ -126,7 +126,8 @@ class SimModule:
         if records is None:
             from qumus_simlab.simlab.records import LabRecords
 
-            records = LabRecords(side.store, getattr(side, "image_dir", None))
+            records = LabRecords(side.store, getattr(side, "image_dir", None),
+                                 getattr(side, "image_roots", ()))
         self.records = records
         self.lab, self.gate, self.jobs, self.store = side.lab, side.gate, side.jobs, side.store
         self.bench = self.lab.bench
@@ -562,7 +563,8 @@ def build_modules(side: Any, *, motion_delay_s: float = 0.0,
                   wall: Callable[[], float] | None = None) -> dict[str, SimModule]:
     from qumus_simlab.simlab.records import LabRecords
 
-    records = LabRecords(side.store, getattr(side, "image_dir", None))
+    records = LabRecords(side.store, getattr(side, "image_dir", None),
+                         getattr(side, "image_roots", ()))
     return {m: SimModule(m, side, motion_delay_s=motion_delay_s, wall=wall, records=records)
             for m in PORTS}
 

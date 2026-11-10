@@ -14,7 +14,7 @@ Port 0 picks free ports (tests).
 Same computer or another computer (Jialei 2026-11-10): the windows bind to
 127.0.0.1 by default. For an agent on another computer either
 - tunnel: `--remote-ports` adds a second listener per window (default
-  18781/18782/18783, loopback) where EVERY request counts as remote, so an
+  28781/28782/28783, loopback) where EVERY request counts as remote, so an
   SSH tunnel ends there and local-only actions (jog, raw switch, unlock,
   fault injection) stay refused even though the tunnel looks like loopback; or
 - network: `--host 0.0.0.0` (or a LAN address); requests from other
@@ -105,7 +105,7 @@ def bench_state(side: Any) -> dict[str, Any]:
     }
 
 
-def sim_routes(side: Any, records: Any) -> Any:
+def sim_routes(side: Any, records: Any, info: dict[str, Any] | None = None) -> Any:
     """The [Q] records/images routes and the [Q-sim] bench views of one window."""
     from fastapi import HTTPException
     from fastapi.responses import FileResponse
@@ -173,6 +173,34 @@ def sim_routes(side: Any, records: Any) -> Any:
                     "timestamp": p.get("timestamp"),
                     "meta": records.scrub(p.get("meta") or {})}
 
+        @app.post("/api/sim/checkpoint")
+        async def checkpoint(request: Request) -> Any:
+            """Save point of the whole sim lab (store + world), local only; 409 while a
+            job is open. The agent saves its own store at the same moment."""
+            from types import SimpleNamespace
+
+            from qumus_simlab.testbench.checkpoint import open_jobs, save_checkpoint
+
+            if not loopback(request):
+                raise HTTPException(status_code=403, detail="save points are local only")
+            body = await request.json()
+            if not isinstance(body, dict) or not isinstance(body.get("dir"), str):
+                raise HTTPException(status_code=400, detail="body: {dir, label}")
+            if busy := open_jobs(side.store):
+                raise HTTPException(status_code=409, detail=f"jobs still open: {', '.join(busy)}")
+            roots = [str(r) for r in records.roots]
+            extra = {**(info or {}), "image_roots": roots, "lab_id": records.lab_id,
+                     "records_head": records.changes(0, 1)["head"]}
+            try:
+                path = save_checkpoint(SimpleNamespace(store=side.store, lab=side.lab,
+                                                       clock=side.clock),
+                                       Path(body["dir"]), label=str(body.get("label") or ""),
+                                       extra=extra)
+            except RuntimeError as e:
+                raise HTTPException(status_code=409, detail=str(e)) from e
+            return {"ok": True, "dir": str(path), "lab_id": records.lab_id,
+                    "records_head": extra["records_head"]}
+
         @app.get("/api/sim/faults")
         def faults() -> Any:
             return side.lab.faults.describe()
@@ -200,8 +228,11 @@ class SimLabServer:
 
     def __init__(self, side: Any, *, host: str = "127.0.0.1",
                  ports: dict[str, int | None] | None = None, motion_delay_s: float = 0.0,
-                 remote_ports: dict[str, int] | None = None) -> None:
+                 remote_ports: dict[str, int] | None = None,
+                 info: dict[str, Any] | None = None) -> None:
         self.side, self.host = side, host
+        #: how this lab was started (seed, target bundle): kept with save points
+        self.info = dict(info or {})
         #: extra listeners (loopback) that treat every request as remote: SSH tunnels end here
         self.remote_ports = dict(remote_ports or {})
         self.modules: dict[str, SimModule] = build_modules(side, motion_delay_s=motion_delay_s)
@@ -224,7 +255,7 @@ class SimLabServer:
     def start(self, timeout_s: float = 10.0) -> SimLabServer:
         import uvicorn
 
-        extra = sim_routes(self.side, self.records)
+        extra = sim_routes(self.side, self.records, self.info)
         listeners = [(m, self.host, self.ports[m], None) for m in self.modules]
         listeners += [(m, "127.0.0.1", p, frozenset()) for m, p in self.remote_ports.items()
                       if m in self.modules]
@@ -260,9 +291,13 @@ class SimLabServer:
             t.join(timeout=5)
 
 
-def build_side(db: str | Path, seed: int | None, target_bundle: str | Path | None = None) -> Any:
+def build_side(db: str | Path, seed: int | None, target_bundle: str | Path | None = None,
+               resume: str | Path | None = None, accept_changed: tuple[str, ...] = ()) -> Any:
     """The one simulated bench: the v1-linked Hall-bar laboratory, optionally
-    with an imported electrode target (the operator's GDS bundle)."""
+    with an imported electrode target (the operator's GDS bundle).
+
+    `resume`: a save point (POST /api/sim/checkpoint) to start from; its seed and
+    target bundle are used, and `db` must be `<new folder>/qumus.db`."""
     from qumus_simlab.config import simulation_profile
     from qumus_simlab.lab import build_lab_side
 
@@ -271,6 +306,21 @@ def build_side(db: str | Path, seed: int | None, target_bundle: str | Path | Non
         raise SystemExit(f"{db} exists: the sim lab always starts from a fresh bench; "
                          "give a new --db path")
     db.parent.mkdir(parents=True, exist_ok=True)
+    saved: dict[str, Any] = {}
+    if resume is not None:
+        from qumus_simlab.testbench.checkpoint import StaleCheckpoint, restore_checkpoint
+
+        if db.name != "qumus.db":
+            raise SystemExit("with --resume, --db must be <new folder>/qumus.db")
+        try:
+            saved = restore_checkpoint(resume, db.parent, accept_changed=accept_changed)
+        except StaleCheckpoint as e:
+            raise SystemExit(f"cannot resume: {e}; pass --accept-changed <file> only for a "
+                             "change proven not to alter the search") from None
+        if seed is not None and saved.get("seed") is not None and seed != saved["seed"]:
+            raise SystemExit(f"the save point was made with seed {saved['seed']}")
+        seed = saved.get("seed", seed)
+        target_bundle = saved.get("target_bundle") or target_bundle
     config = simulation_profile("hallbar-linked")
     if target_bundle is not None:
         from qumus_simlab.testbench.hallbar import (
@@ -281,24 +331,34 @@ def build_side(db: str | Path, seed: int | None, target_bundle: str | Path | Non
         bundle = Path(target_bundle).resolve()
         load_imported_hallbar_target(bundle, workspace=db.parent)
         config = with_hallbar_target(config, target=load_imported_hallbar_target(bundle))
-    return build_lab_side(db, seed=seed, testbench_config=config)
+    side = build_lab_side(db, seed=seed, testbench_config=config,
+                          state_path=saved.get("state_path"))
+    if saved:
+        side.image_roots = tuple(Path(r) for r in saved.get("image_roots") or ())
+        side.store.emit("notification", {"level": "info", "text": (
+            f"Sim lab resumed from save point {saved['resumed']['checkpoint']} (lab event "
+            f"{saved['last_event_id']}, code {saved.get('git_commit')}).")})
+    side.info = {"seed": seed, "target_bundle": str(Path(target_bundle).resolve())
+                 if target_bundle else None, "resumed": saved.get("resumed")}
+    return side
 
 
 def main(args: Any) -> None:
-    side = build_side(args.db, args.seed, getattr(args, "target_bundle", None))
+    side = build_side(args.db, args.seed, getattr(args, "target_bundle", None),
+                      getattr(args, "resume", None), tuple(getattr(args, "accept_changed", ())))
     remote = {}
     if getattr(args, "remote_ports", False):
-        remote = {m: p + 10000 for m, p in PORTS.items()}
+        remote = {m: p + 20000 for m, p in PORTS.items()}
     server = SimLabServer(side, host=args.host, motion_delay_s=args.motion_delay,
                           ports={"exfoliation": args.exfoliation_port,
                                  "stacking": args.stacking_port,
                                  "reactor": args.reactor_port},
-                          remote_ports=remote).start()
+                          remote_ports=remote, info=getattr(side, "info", None)).start()
     for module, url in server.urls.items():
         print(f"{module:12s} {url}api/describe", flush=True)
     for module, port in remote.items():
         print(f"{module:12s} http://127.0.0.1:{port}/  (remote: SSH tunnel endpoint)", flush=True)
-    print(f"Simulated lab (demo: true), Hall-bar bench, seed {args.seed}, "
+    print(f"Simulated lab (demo: true), Hall-bar bench, seed {side.info['seed']}, "
           f"records in {Path(args.db).resolve()}. Ctrl+C to stop.", flush=True)
     try:
         while True:

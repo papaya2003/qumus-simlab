@@ -108,9 +108,14 @@ def _statements(sql: str) -> list[str]:
 class LabRecords:
     """Change feed, write-back and images of one simulated lab."""
 
-    def __init__(self, store: Any, image_dir: str | Path | None) -> None:
+    def __init__(self, store: Any, image_dir: str | Path | None,
+                 extra_roots: tuple[str | Path, ...] | list[str | Path] = ()) -> None:
         self.store = store
         self.image_dir = Path(image_dir).resolve() if image_dir is not None else None
+        #: picture folders of earlier workspaces a resumed lab still points at
+        #: (save points: records keep absolute paths). Same id in every root.
+        self.roots = ([self.image_dir] if self.image_dir is not None else []) + [
+            Path(r).resolve() for r in extra_roots]
         install_change_log(store)
         #: unique per lab store: a client that sees it change starts again from since=0
         self.lab_id = store.get_meta("lab_id")
@@ -118,27 +123,33 @@ class LabRecords:
     # -- images ---------------------------------------------------------------
     def image_id(self, path: str | Path | None) -> str | None:
         """The id of a picture the lab saved (None: not one of the lab's files)."""
-        if not path or self.image_dir is None:
+        if not path or not self.roots:
             return None
         try:
-            rel = Path(path).resolve().relative_to(self.image_dir)
-        except (ValueError, OSError):
+            resolved = Path(path).resolve()
+        except OSError:
             return None
-        return rel.as_posix()
+        for root in self.roots:
+            try:
+                return resolved.relative_to(root).as_posix()
+            except ValueError:
+                continue
+        return None
 
     def image_path(self, image_id: str) -> Path:
         """The file of an image id. ValueError: malformed; FileNotFoundError: missing."""
-        if (self.image_dir is None or not image_id or image_id.startswith("/")
+        if (not self.roots or not image_id or image_id.startswith("/")
                 or "\\" in image_id or any(p in ("", ".", "..") for p in image_id.split("/"))):
             raise ValueError(f"malformed image id {image_id!r}")
-        f = (self.image_dir / image_id).resolve()
-        try:
-            f.relative_to(self.image_dir)
-        except ValueError as e:
-            raise ValueError(f"malformed image id {image_id!r}") from e
-        if not f.is_file():
-            raise FileNotFoundError(image_id)
-        return f
+        for root in self.roots:
+            f = (root / image_id).resolve()
+            try:
+                f.relative_to(root)
+            except ValueError as e:
+                raise ValueError(f"malformed image id {image_id!r}") from e
+            if f.is_file():
+                return f
+        raise FileNotFoundError(image_id)
 
     def image_meta(self, image_id: str) -> dict[str, Any]:
         f = self.image_path(image_id)
@@ -165,10 +176,13 @@ class LabRecords:
     def scrub(self, value: Any) -> Any:
         """Replace every lab image path inside a JSON value by "qumus-image:<id>"."""
         if isinstance(value, str):
-            if (self.image_dir is not None and len(value) < 4096
-                    and value.startswith(str(self.image_dir))):
+            if len(value) < 4096 and any(value.startswith(str(r)) for r in self.roots):
                 iid = self.image_id(value)
-                if iid is not None and (self.image_dir / iid).is_file():
+                if iid is not None:
+                    try:
+                        self.image_path(iid)
+                    except (ValueError, FileNotFoundError):
+                        return value
                     return IMAGE_PREFIX + iid
             return value
         if isinstance(value, dict):
@@ -180,7 +194,7 @@ class LabRecords:
     def unscrub(self, value: Any) -> Any:
         """The reverse of `scrub` for rows the agent sends back."""
         if isinstance(value, str):
-            if value.startswith(IMAGE_PREFIX) and self.image_dir is not None:
+            if value.startswith(IMAGE_PREFIX) and self.roots:
                 iid = value[len(IMAGE_PREFIX):]
                 try:
                     return str(self.image_path(iid))
