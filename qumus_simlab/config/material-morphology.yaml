@@ -1,0 +1,12 @@
+# Named profile matching the default for new everyday worlds.
+# Merge this exfoliation mapping into testbench.yaml; not a standalone bench.
+# Units and all numerical distributions are uncalibrated simulation fixtures.
+exfoliation:
+  morphology:
+    min_area_um2: 12
+    max_area_um2: 12000
+    max_aspect_ratio: 3.0
+    thick_area_multiplier: 2.5
+    cluster_fraction: 0.65
+    cluster_radius_mm: 0.08
+    cluster_count: 4

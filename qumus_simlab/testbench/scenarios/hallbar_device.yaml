@@ -1,0 +1,132 @@
+# Scripted demo: the plan #105 goal. hBN on Gr onto the eight-electrode wafer
+# (chip_e01), starting from tapes. Run with the Hall-bar bench:
+#   python -m qumus_simlab serve --profile hallbar-linked --scenario hallbar_device
+# (add --target-bundle <dir> for an operator-imported GDS target). Free: no model.
+# The stand-in picker submits the placement solver's best hBN/Gr pair
+# (get_flake_candidates target_pairs) and otherwise asks for one more chip of the
+# limiting material; the stand-in designer passes the solver's placements to
+# create_device_design (KLayout; QUMUS_KLAYOUT_BACKEND=python for headless runs).
+name: hallbar_device
+description: hBN/Gr Hall bar on the eight-electrode wafer from tapes, with bounded
+  exfoliation rounds until the placement solver finds a fitting pair.
+turns:
+  - actions:
+      - say: {agent: orchestrator, text: "Sure. I will ask the advisor for the Hall-bar plan on the electrode chip, exfoliate and search hBN and graphene until a pair fits all eight contacts, have the layout made in KLayout, and then stack it."}
+      - tool:
+          agent: orchestrator
+          name: update_plan
+          args:
+            note: initial plan
+            plan:
+              - {id: s1, title: Device plan, owner: advisor}
+              - {id: s2, title: Check chips and carriers, owner: eyes}
+              - {id: s3, title: Exfoliate and search until a pair fits the electrodes, owner: picker}
+              - {id: s4, title: Lay out the device in KLayout, owner: designer}
+              - {id: s5, title: Stack the device, owner: hands}
+      - delegate: {to: advisor, task: "Plan an hBN/graphene Hall bar on the eight-electrode chip chip_e01. Read its geometry and submit the plan with submit_device_plan."}
+      - tool: {agent: advisor, name: get_lab_setup, args: {}}
+      - tool: {agent: advisor, name: get_target_geometry, args: {chip_id: chip_e01}, save_as: target}
+      - tool: {agent: advisor, name: get_experience, args: {materials: [Gr, hBN]}, save_as: experience}
+      - tool:
+          agent: advisor
+          name: submit_device_plan
+          args:
+            device_name: hBN/graphene Hall bar on the eight-electrode wafer
+            target_chip_id: chip_e01
+            layer_stack:
+              - {material: hBN, role: top_hbn, thickness: 10-40 nm, flake: true,
+                 thickness_labels: ["10-20", "20-30", "30-40"]}
+              - {material: Gr, role: channel, thickness: monolayer, flake: true,
+                 thickness_labels: [monolayer]}
+              - {material: metal, role: existing_electrodes, flake: false}
+            contact_scheme: Gr directly on all eight existing electrode ends; hBN covers the whole Gr
+            gate_scheme: global Si back gate
+            channel: Gr shape set by the flake; must contain every electrode end
+            workflow_plan: [exfoliate and search hBN and graphene, select a pair that fits the eight contacts,
+                            lay out in KLayout, pick up hBN then Gr, release onto the electrodes]
+            evidence: "Target geometry: {{target._summary}}. Distilled experience: {{experience._summary}}."
+          save_as: plan
+      - done: {agent: advisor, summary: "Device plan submitted: {{plan._summary}}. Two flakes: hBN on top, monolayer graphene on the electrodes."}
+      - delegate: {to: eyes, task: "List the chips and the crystal carriers on the bench."}
+      - tool: {agent: eyes, name: inspect_bench, args: {}, save_as: look}
+      - tool: {agent: eyes, name: list_samples, args: {}, save_as: setup}
+      - done: {agent: eyes, summary: "Bench: {{look._summary}}. {{setup._summary}}."}
+      - say: {agent: orchestrator, text: "There are no flakes yet. Hands will exfoliate and search one hBN chip and one graphene chip first."}
+      - delegate: {to: hands, step: s3, task: "Exfoliate hBN onto one bare chip and search it; then the same for graphene (Gr)."}
+      - tool: {agent: hands, name: exfoliate_chips, args: {material: hBN, num_chips: 1}, save_as: ex1}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex1.job_id}}", timeout_s: 600}}
+      - tool: {agent: hands, name: search_chip, args: {material: hBN}, save_as: se1}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{se1.job_id}}", timeout_s: 600}}
+      - tool: {agent: hands, name: exfoliate_chips, args: {material: Gr, num_chips: 1}, save_as: ex2}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex2.job_id}}", timeout_s: 600}}
+      - tool: {agent: hands, name: search_chip, args: {material: Gr}, save_as: se2}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{se2.job_id}}", timeout_s: 600}}
+      - done: {agent: hands, summary: "Exfoliated and searched one hBN chip and one graphene chip.", step_status: running}
+      - delegate: {to: picker, task: "Select an hBN/Gr pair that fits the eight electrode ends."}
+      - pick_flakes: {save_as: pick}
+      # Seven more bare chips at most (the linked bench holds nine): one chip of the
+      # material the solver names as limiting per round.
+      - repeat:
+          times: 7
+          until: {result_of: pick, status: ok}
+          actions:
+            - done: {agent: picker, summary: "No fitting pair yet: {{pick._summary}}. One more {{pick.material}} chip is needed.", step_status: running}
+            - delegate: {to: hands, step: s3, task: "Exfoliate and search one more {{pick.material}} chip."}
+            - tool: {agent: hands, name: exfoliate_chips, args: {material: "{{pick.material}}", num_chips: 1}, save_as: exn}
+            - tool: {agent: hands, name: wait_job, args: {job_id: "{{exn.job_id}}", timeout_s: 600}}
+            - tool: {agent: hands, name: search_chip, args: {material: "{{pick.material}}"}, save_as: sen}
+            - tool: {agent: hands, name: wait_job, args: {job_id: "{{sen.job_id}}", timeout_s: 600}}
+            - done: {agent: hands, summary: "Exfoliated and searched one more {{pick.material}} chip.", step_status: running}
+            - delegate: {to: picker, task: "Select an hBN/Gr pair from all observed flakes."}
+            - pick_flakes: {save_as: pick}
+      - branch:
+          result_of: pick
+          cases:
+            ok:
+              - done: {agent: picker, summary: "Selected {{pick._summary}}."}
+              - delegate: {to: designer, task: "Lay out the Hall bar on the selected pair in KLayout and submit it."}
+              - lay_out: {save_as: design}
+              - branch:
+                  result_of: design
+                  cases:
+                    ok:
+                      - done: {agent: designer, summary: "{{design._summary}}"}
+                      - delegate: {to: hands, task: "Stack the selected flakes onto the electrode chip."}
+                      - tool: {agent: orchestrator, name: get_project_context, args: {}, save_as: proj}
+                      - tool: {agent: hands, name: stack_device,
+                               args: {flake_ids: "{{proj.state.selected_flakes}}", target_chip_id: chip_e01},
+                               save_as: stack}
+                      - branch:
+                          result_of: stack
+                          cases:
+                            pending:
+                              - tool: {agent: hands, name: wait_job,
+                                       args: {job_id: "{{stack.job_id}}", timeout_s: 600}, save_as: stacked}
+                              # Stacking takes longer than one 600 s wait: keep waiting (up to 2 h).
+                              - repeat:
+                                  times: 11
+                                  until: {result_of: stacked, status_not: pending}
+                                  actions:
+                                    - tool: {agent: hands, name: wait_job,
+                                             args: {job_id: "{{stack.job_id}}", timeout_s: 600}, save_as: stacked}
+                              - branch:
+                                  result_of: stacked
+                                  cases:
+                                    ok: &stacked_ok
+                                      - done: {agent: hands, summary: "Stack landed on chip_e01: {{stacked._summary}}."}
+                                      - say: {agent: orchestrator, text: "The Hall bar is stacked on chip_e01: hBN on top, graphene on all eight electrode ends, with the KLayout design checked by code."}
+                                    corrected: *stacked_ok
+                                  default:
+                                    - tool: {agent: hands, name: request_human_help,
+                                             args: {reason: "stacking needs attention", job_id: "{{stack.job_id}}"}}
+                                    - done: {agent: hands, summary: "Stacking needs attention ({{stacked._summary}}); asked a human.", step_status: failed}
+                                    - say: {agent: orchestrator, text: "Stacking stopped and needs a person: {{stacked._summary}}."}
+                          default:
+                            - done: {agent: hands, summary: "Could not start stacking: {{stack._summary}}.", step_status: failed}
+                            - say: {agent: orchestrator, text: "The pair is selected and the design accepted, but stacking could not start: {{stack._summary}}."}
+                  default:
+                    - done: {agent: designer, summary: "Design not accepted: {{design._summary}}.", step_status: failed}
+                    - say: {agent: orchestrator, text: "The selected pair could not be laid out: {{design._summary}}."}
+          default:
+            - done: {agent: picker, summary: "{{pick._summary}}", step_status: failed}
+            - say: {agent: orchestrator, text: "After the bounded exfoliation rounds no pair fits the eight electrodes ({{pick._summary}}). I can run more rounds after more bare chips are loaded."}

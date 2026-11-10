@@ -1,0 +1,247 @@
+# The bench: stations, storage slots and fixed positions (mm, degrees).
+#
+# Layout of the real lab (Jialei's sketch and description, 2026-10-21; matches
+# the photo in the Qumus paper, Fig. 1d):
+#
+#     [ exfoliation ]        [ search & stacking ]          [ reactor ]
+#   [L-store] (arm_left) [M-store] (arm_right) [R-store]    (arm_reactor, planned)
+#
+# - three storage boards with a QR marker in each corner (the overview camera
+#   locates the boards by them) and black frames ("slots") that hold objects;
+#   chips carry no QR code: a chip is known by the slot it sits in;
+# - left board: material tape on glass slides ("carriers") and bare chips;
+#   middle board: exfoliated chips, and the hand-over between the two arms;
+#   right board: stamps and target / finished (stacked) chips;
+# - arm_left serves the left board, the exfoliation stage and the middle board;
+#   arm_right serves the middle board, the search & stacking stage (transfer
+#   stage), the stamp hand-off and the right board;
+# - one overview camera sees the whole table; the microscope has its own camera.
+#
+# Frames: everything under `stations`, `slots`, `qr_markers`, `microscope`,
+# `exfoliator.origin`, `regions` and the arms' `base` is in ONE world frame: origin
+# at the table's front-left corner, x to the right, y away from the operator.
+# Each arm commands in its OWN frame: arm pose = world - base (a translation;
+# on the real bench this becomes each arm's calibration).
+#
+# !!! PLACEHOLDER NUMBERS !!! Scaled from the sketch; real values come from
+# lab calibration (spec 15.3).
+
+table: {x: [0, 1260], y: [0, 630]}
+
+stations:
+  left_storage:
+    kind: storage
+    label: Left storage (material slides, bare chips)
+    region: {x: [45, 165], y: [60, 220]}
+  middle_storage:
+    kind: storage
+    label: Middle storage (exfoliated chips)
+    region: {x: [470, 590], y: [60, 220]}
+  right_storage:
+    kind: storage
+    label: Right storage (stamps, devices)
+    region: {x: [895, 1015], y: [60, 220]}
+  # `module` (drawing only): the box around a whole machine with all its parts
+  # at their furthest positions, centred on them (Jialei's sketch, 2026-10-22)
+  exfoliation_stage:
+    kind: exfoliation
+    label: Exfoliation stage
+    x: 307
+    y: 318
+    region: {x: [287, 327], y: [298, 338]}
+    module: {x: [168, 447], y: [280, 377]}
+  transfer_stage:
+    kind: microscope
+    label: Search & stacking stage
+    x: 740                       # stage at its load position (arm drop-off), right below the objective
+    y: 340
+    region: {x: [725, 755], y: [325, 355]}
+    module: {x: [689, 956], y: [305, 471]}
+  reactor:
+    kind: reactor
+    label: Reactor (placeholder)
+    placeholder: true            # stage 2; only a port to put a chip in and take it out
+    region: {x: [1050, 1190], y: [70, 570]}
+
+# Black frames on the storage boards. holds = the ledger kind that belongs
+# there (carrier = material tape on a glass slide).
+slots:
+  left_slide_1: {x: 75, y: 185, station: left_storage, holds: carrier, size: [25, 40]}
+  left_slide_2: {x: 135, y: 185, station: left_storage, holds: carrier, size: [25, 40]}
+  left_chip_1: {x: 70, y: 130, station: left_storage, holds: chip, size: [10, 10]}
+  left_chip_2: {x: 105, y: 130, station: left_storage, holds: chip, size: [10, 10]}
+  left_chip_3: {x: 140, y: 130, station: left_storage, holds: chip, size: [10, 10]}
+  left_chip_4: {x: 70, y: 95, station: left_storage, holds: chip, size: [10, 10]}
+  left_chip_5: {x: 105, y: 95, station: left_storage, holds: chip, size: [10, 10]}
+  left_chip_6: {x: 140, y: 95, station: left_storage, holds: chip, size: [10, 10]}
+  mid_chip_1: {x: 495, y: 180, station: middle_storage, holds: chip, size: [10, 10]}
+  mid_chip_2: {x: 530, y: 180, station: middle_storage, holds: chip, size: [10, 10]}
+  mid_chip_3: {x: 565, y: 180, station: middle_storage, holds: chip, size: [10, 10]}
+  mid_chip_4: {x: 495, y: 140, station: middle_storage, holds: chip, size: [10, 10]}
+  mid_chip_5: {x: 530, y: 140, station: middle_storage, holds: chip, size: [10, 10]}
+  mid_chip_6: {x: 565, y: 140, station: middle_storage, holds: chip, size: [10, 10]}
+  mid_chip_7: {x: 495, y: 100, station: middle_storage, holds: chip, size: [10, 10]}
+  mid_chip_8: {x: 530, y: 100, station: middle_storage, holds: chip, size: [10, 10]}
+  mid_chip_9: {x: 565, y: 100, station: middle_storage, holds: chip, size: [10, 10]}
+  # a stamp is a PDMS dome + PC film on a glass slide (Jialei, 2026-10-21): slide-sized,
+  # lying with its long side along x as on the holder (stamp_slide below), two
+  # frames side by side and one below; lying, three in a row would not fit the board
+  right_stamp_1: {x: 930, y: 196, station: right_storage, holds: stamp, size: [40, 25]}
+  right_stamp_2: {x: 980, y: 196, station: right_storage, holds: stamp, size: [40, 25]}
+  right_stamp_3: {x: 930, y: 164, station: right_storage, holds: stamp, size: [40, 25]}
+  right_chip_1: {x: 920, y: 135, station: right_storage, holds: chip, size: [10, 10]}
+  right_chip_2: {x: 955, y: 135, station: right_storage, holds: chip, size: [10, 10]}
+  right_chip_3: {x: 990, y: 135, station: right_storage, holds: chip, size: [10, 10]}
+  right_chip_4: {x: 920, y: 95, station: right_storage, holds: chip, size: [10, 10]}
+  right_chip_5: {x: 955, y: 95, station: right_storage, holds: chip, size: [10, 10]}
+  right_chip_6: {x: 990, y: 95, station: right_storage, holds: chip, size: [10, 10]}
+  reactor_port: {x: 1120, y: 140, station: reactor, holds: chip, size: [10, 10]}
+
+# A stamp's glass slide and where its PDMS dome sits on it. The slide keeps ONE
+# orientation everywhere: lying with its long side along world x and the dome
+# near its left end, in its storage frame, on arm_right's nozzle and on the
+# holder (the holder carries it that way, the dome at the head point). An arm
+# holds a slide by its centre, so the hand-off point is the head point plus
+# (length / 2 - dome_inset_mm) along x (flows/bench.py stamp_handoff): the
+# dome lands exactly under the head and nothing turns or shifts at the
+# hand-off. The real orientation of the slides in storage is not known yet
+# (ask the lab); this one keeps storage, grip and holder consistent.
+stamp_slide: {size: [40, 25], dome_inset_mm: 7}
+
+# QR markers in the four corners of each storage board (overview-camera fiducials).
+qr_markers:
+  left_storage: [[51, 66], [159, 66], [159, 214], [51, 214]]
+  middle_storage: [[476, 66], [584, 66], [584, 214], [476, 214]]
+  right_storage: [[901, 66], [1009, 66], [1009, 214], [901, 214]]
+
+# Exfoliator (Jialei's drawings, 2026-10-21 and 2026-10-22): white tape stretched
+# between two rolls over the exfoliation stage. Seen from above, both rolls hang
+# from sliders on one slide rail along the back of the module; the right roll's
+# slider stays put (the fixed roll), the left one moves along the rail. The stage itself does not move; it holds the
+# chip by vacuum and heats. Both rolls lie horizontally with their axes along
+# world y, so from above each is a bar across the tape; the tape runs along x at
+# the stage's y and is tape_width_mm wide.
+#
+#   front view (x right, z up; z = 0 is the stage top / chip surface)
+#
+#        movable roll  O  <- on the cross positioner (x and z), gantry (gx, gz)
+#                        \        tape, a straight line between the rolls,
+#        press pad   v    \       hanging just above the chip
+#              [==chip==]  \
+#              [  stage ]   O  fixed roll, right of and a little below the chip
+#
+# Gantry coordinates (mm): (0, 0) = parked, the movable roll right above the
+# fixed one (seen from above they coincide), park_height_mm above the stage top,
+# the tape clear of the chip. Applying moves it right, down, then left past the
+# stage and down, so the tape hangs over the chip within press reach; then the
+# press pad (arm_left's nozzle with a rubber tip) presses it on, and only the
+# pressed area sticks. Peeling moves the roll up and back to the left so the
+# tape leaves the chip centre at the peel angle (as far as the travel allows).
+exfoliator:
+  origin: {x: 347, y: 318}       # world point of the fixed roll = gantry x 0
+  roller: {length_mm: 34, diameter_mm: 12}
+  tape_width_mm: 25
+  rail: {x: [186, 429], y: 354}            # the slide rail seen from above, for drawing
+  park_height_mm: 78             # movable roll axis above the stage top at gantry z 0
+  fixed_height_mm: -3            # fixed roll axis relative to the stage top
+  travel: {x: [-150, 60], z: [-80, 10]}    # cross positioner range (gantry frame)
+  apply_path: [[40, 0], [40, -60], [-70, -60], [-70, -75]]   # right, down, left, down
+  press_reach_mm: 2.0            # the pad can push the tape down this far onto the chip
+  peel_run_mm: 80                # roll distance from the chip centre at the end of a peel
+  roll_length_mm: 3000           # fresh roll of white tape
+  peel_angle_deg: 30             # default peel angle (tape vs stage)
+
+arm_left:                          # exfoliation side (v1: COM7)
+  base: {x: 307, y: 126}           # world position of the arm frame origin
+  reach: [left_storage, exfoliation_stage, middle_storage]
+  reach_mm: 280
+  home: {x: 0, y: 110, z: 120, rotation: 0}     # arm frame
+  # travel height: clear of the parked movable roll (axis at park_height_mm 78,
+  # radius 6) with the nozzle (radius 3); at 80 it ran through it (2026-10-22)
+  safe_z: 95
+  pick_z: 2
+  place_z: 3
+  massage_z: 1.0                   # nozzle height when pressing the tape (v1 massage)
+  press_contact_z: 1.2             # nozzle height at which its rubber tip meets the tape on
+                                   # a chip; a press goes press_depth_mm below it
+  massage_span_mm: 4.0             # half width of the massage stroke pattern
+  # pressing order (owner review, 2026-10-22): columns from right (x + span) to left
+  # (x - span), each one stroke along y, front to back; v1 went row by row
+  massage_columns: 3
+
+arm_right:                         # search & stacking side (v1: COM23)
+  base: {x: 765, y: 126}
+  reach: [middle_storage, transfer_stage, right_storage]
+  places: [stamp_handoff]          # named positions outside the stations it also serves
+  reach_mm: 280
+  home: {x: 0, y: 110, z: 120, rotation: 0}
+  safe_z: 80
+  pick_z: 2
+  place_z: 3
+
+arm_reactor:                       # planned with the reactor (stage 2): no device yet
+  planned: true
+  base: {x: 1120, y: 600}
+  reach: [reactor, right_storage]
+
+# Finding & stacking stage (device id `transfer_stage`; v1 "sample stage", PDV):
+# Coarse travel carries a chip from the arm drop-off to the microscope. Fine
+# XY stays bench-aligned; in-plane theta rotates the mounted assembly about
+# the translated station-centre pivot. Mechanical Z is fixed at zero in this
+# synthetic profile; independent microscope Z supplies focusing.
+transfer_stage:
+  mechanics_version: 2
+  source: synthetic
+  kinematic_order: [coarse_translation, fine_translation, pivot_rotation]
+  pivot: station_center
+  load: {x: 0, y: 0, z: 0}
+  microscope: {x: 0, y: 80, z: 0}     # z 0: a nominal chip in the focal plane
+
+# Stamp holder (device id `transfer_arm`, the v1 name): a pure x/y/z translation
+# stage, no rotation (Jialei's drawings, 2026-10-21 and 2026-10-22; not a jointed
+# arm like arm_left/arm_right). Its axes are parallel to the world axes: the world
+# point under the head (the stamp's PDMS dome) is origin + (x, y). The glass slide
+# lies ON the holder, held by a round vacuum hole in the holder's top face; the
+# slide sticks out to the left and carries the stamp at its front (left) end,
+# hanging free over nothing. The holder waits at the bottom right of the module,
+# at the load pose, where arm_right puts a stamp on it (the hand-off,
+# flows/bench.py stamp_handoff: the slide's centre 13 mm right of the head, so
+# the dome lands under it; stamp_slide above). Searching moves only the stage;
+# for stacking the holder goes up (y), then left (x) until the stamp is under
+# the fixed objective, aligns in x/y and presses down in z; back out: right,
+# then down. Between stacking steps that keep the same stamp it waits at the
+# rail corner (park), where its y leg ends and the x leg to the objective
+# starts (owner, 2026-11-04, #181: "不换印章时不必每次退回起点，应在拐角待命");
+# it goes down to load only to take or return a stamp (ManipulatorTo "load").
+# The owner confirmed this corner (2026-11-04, #181).
+transfer_arm:
+  origin: {x: 700, y: 330}                   # world point under the head at x = y = 0
+  over_stage: {x: 40, y: 90}                 # dome at the microscope centre (740, 420)
+  over_stage_tolerance_mm: 12.5              # head this close to the centre = over the stage
+  load: {x: 150, y: 10, z: 6.5}              # head at (850, 340): the dome of a stamp put
+                                             # down at the hand-off (863, 340)
+  park: {x: 150, y: 90, z: 6.5}              # rail corner, head at (850, 420): waits here
+                                             # while the same stamp is used again (#181)
+  home: {x: 150, y: 10, z: 6.5}
+  safe_z: 6.5
+  approach_z: 5.5                            # just above contact (v1 initialize Z_TARGET 5.4)
+
+microscope:
+  center: {x: 740, y: 420}         # world point under the objective
+  fov_mm_10x: [1.3, 0.86]          # field of view at 10x; scales with 10/objective
+  scan_objective: 10
+  revisit_objectives: [20, 100]
+  # Independent mechanical focus Z shifts this nominal optical plane upward.
+  # Sample translation/rotation and stamp XYZ never serve as focus controls.
+  focal_plane_z: 0.0
+
+cameras:
+  overview_camera: {sees: table}   # one camera over the whole table
+
+# Named regions the locator can be asked about (world frame). Every station
+# and every slot above also gets its own region (a slot: its frame + 3 mm).
+regions:
+  tape: {x: [287, 327], y: [298, 338]}           # what is stuck to the tape over the stage
+  microscope: {x: [725, 755], y: [405, 435]}
+  workspace: {x: [0, 1260], y: [0, 630]}         # the whole table (finds dropped objects)
+slot_margin_mm: 3.0

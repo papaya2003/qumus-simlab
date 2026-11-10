@@ -1,0 +1,31 @@
+# Two exfoliations submitted back to back without waiting (BUG A, 2026-10-22):
+# the second is queued behind the first, both book their own slots and chips at
+# submit, both succeed. Needs an experience look-up by the advisor first.
+name: two_exfoliations
+description: hands submits an hBN and a graphene exfoliation without waiting between them;
+  both must land in distinct slots.
+turns:
+  - actions:
+      - say: {agent: orchestrator, text: "I will have the advisor look up both materials, the eyes check the bench, then the hands exfoliate hBN and graphene."}
+      - tool:
+          agent: orchestrator
+          name: update_plan
+          args:
+            note: initial plan
+            plan:
+              - {id: s1, title: Look up hBN and graphene experience, owner: advisor}
+              - {id: s2, title: Check the bench, owner: eyes}
+              - {id: s3, title: Exfoliate hBN and graphene, owner: hands}
+      - delegate: {to: advisor, step: s1, task: "Look up the exfoliation experience for hBN and Gr."}
+      - tool: {agent: advisor, name: get_experience, args: {materials: [hBN, Gr]}, save_as: experience}
+      - done: {agent: advisor, summary: "Experience looked up: {{experience._summary}}"}
+      - delegate: {to: eyes, step: s2, task: "Look at the bench."}
+      - tool: {agent: eyes, name: inspect_bench, args: {}, save_as: look}
+      - done: {agent: eyes, summary: "Bench: {{look._summary}}"}
+      - delegate: {to: hands, step: s3, task: "Exfoliate hBN onto one bare chip and graphene onto another; submit both, then wait for both."}
+      - tool: {agent: hands, name: exfoliate_chips, args: {material: hBN, num_chips: 1}, save_as: ex1}
+      - tool: {agent: hands, name: exfoliate_chips, args: {material: Gr, num_chips: 1}, save_as: ex2}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex1.job_id}}", timeout_s: 600}, save_as: w1}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex2.job_id}}", timeout_s: 600}, save_as: w2}
+      - done: {agent: hands, summary: "hBN: {{w1._summary}}; Gr: {{w2._summary}}"}
+      - say: {agent: orchestrator, text: "Both exfoliations are done: {{w1._summary}}; {{w2._summary}}."}

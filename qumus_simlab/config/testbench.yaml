@@ -1,0 +1,176 @@
+# Testbench (simulated lab) imperfection model, spec 11.2.
+seed: 7
+placement:
+  sigma_mm: 0.25          # typical placement error per axis
+  sigma_deg: 1.0
+  big_error_prob: 0.05    # chance a placement is badly off ("placed askew")
+  big_error_mm: 2.0
+  big_error_deg: 6.0
+pick:
+  fail_prob: 0.0          # chance the vacuum does not pick the object up
+  grab_radius_mm: 3.0
+locator:                  # the overview camera (YOLO-like detector + board QR markers)
+  sigma_mm: 0.05          # measurement noise per axis, new in every frame
+  sigma_deg: 0.2
+  # per-object bias, the same in every frame until the object moves (lighting,
+  # which edge the detector locks on to, local calibration error), so voting
+  # over several frames cannot average it away. Placeholder, no measurement.
+  bias_sigma_mm: 0.1
+  bias_sigma_deg: 0.3
+  # heavy tail: v1's real tracking log (yolo_cv/movement_history.jsonl) shows
+  # re-detections of objects that had not moved scattering by ~0.3 mm (median)
+  # and ~1 mm (90%); unconfirmed what the log measured, so used as a tail only
+  tail_prob: 0.1          # chance a detection carries the extra tail error
+  tail_sigma_mm: 0.3
+  miss_prob: 0.02         # an object in view is not reported in a frame
+  false_positive_prob: 0.003   # a phantom object (glare, tape residue) per look at a region
+  confuse_material_prob: 0.02  # bare vs exfoliated chip read the wrong way round
+stage:
+  # Jialei 2026-11-03: the positioning stage is precise and its error does not
+  # build up; the former 2 um per-move error is removed.
+  sigma_mm: 0.0           # transfer-stage positioning error (encoder readback is exact)
+exfoliation:
+  # No recipe model (Jialei, 2026-11-03; the 2026-10-22 hidden-best-recipe model
+  # was removed): temperature, peel speed and angle, press depth and massage
+  # rounds are still carried out by the devices, but the yield and the layer mix
+  # do not depend on them. Placeholder numbers, not lab values.
+  flakes_per_chip: 20         # mean flakes per fully pressed chip, fresh mother tape
+  press_contact_z: 1.2        # nozzle height at which the rubber tip meets the tape on the chip
+  strokes_per_round: 6        # low massage strokes in one round (bench.yaml massage_columns x 2)
+  # only the part of the chip the press pad went over sticks to the tape: the
+  # yield scales with that fraction and flakes land only there
+  press_pad_radius_mm: 2.5    # rubber tip footprint (placeholder; with the 3-column
+                              # massage of bench.yaml it covers a 10 mm chip up to
+                              # 1 mm off centre)
+  press_cell_mm: 0.5          # resolution of the pressed-area map
+  tape_wear: 0.15         # each use of the mother tape transfers 15% less
+  lift_without_vacuum_prob: 1.0   # peeling with the stage vacuum off lifts the object
+  # layer-number classes and their probability; a range draws uniformly
+  layers:
+    - {layers: 1, p: 0.12}
+    - {layers: 2, p: 0.10}
+    - {layers: 3, p: 0.08}
+    - {layers: [4, 9], p: 0.30}
+    - {layers: [10, 60], p: 0.40}
+  # per material, replacing `layers`: hBN flakes are mostly 10-50 nm (0.33 nm a layer)
+  layers_by_material:
+    hBN:
+      - {layers: [3, 30], p: 0.25}
+      - {layers: [31, 90], p: 0.40}
+      - {layers: [91, 150], p: 0.25}
+      - {layers: [151, 300], p: 0.10}
+  area_um2_median: 250
+  area_log_sigma: 1.0
+  # Default for NEW worlds: qualitative clustered flakes inside pressed regions.
+  # Checkpoints preserve their saved profile; pre-profile worlds keep compatible
+  # scalar generation. Values are illustrative, not measured yields.
+  morphology:
+    min_area_um2: 12
+    max_area_um2: 12000
+    max_aspect_ratio: 3.0
+    thick_area_multiplier: 2.5
+    cluster_fraction: 0.65
+    cluster_radius_mm: 0.08
+    cluster_count: 4
+microscope:
+  best_focus_sigma: 0.3   # chip-to-chip focus offset (mm of focus travel)
+  focus_tilt_per_mm: 0.01
+  depth_of_focus_10x: 0.15
+  misclassify_10x: 0.25   # chance a flake's layer class is off by one at 10x
+  misclassify_100x: 0.03
+  corner_sigma_mm: 0.003
+  contact_sigma_mm: 0.003   # stamp contact-front measurement noise
+  contact_min_radius_mm: 0.02
+  fringe_gap_sigma_mm: 0.0003   # gap read from the ring order, about half a fringe
+  replay_dir: null        # legacy live photo substitution: non-null is refused; offline fixtures can replay photos
+stamp:                    # PDMS dome + PC film (v1 stacking)
+  structure:
+    profile_id: synthetic-glass-pdms-pc-paper-v2
+    # Plan-view dimensions only; glass/PC thickness and refractive indices
+    # are unmeasured. Slide dimensions/inset come from bench.stamp_slide.
+    cap_radius_mm: 5.0
+    aperture_shape: diamond
+    aperture_radius_semantics: inradius
+    # Illustrative centre-to-edge distance; vertices are sqrt(2) times this.
+    # The paper opening encloses the separate circular PDMS footprint.
+    aperture_radius_mm: 5.0
+    aperture_offset_mm: [0.0, 0.0]
+    # The aperture exceeds the centred 5x FOV. An unobscured view cannot
+    # establish its exact centre; the separate physical apex may be offset.
+  # Synthetic perturbations, not laboratory calibration. Integrated from the
+  # existing Clock and holder motion; image count never advances the model.
+  dynamics:
+    lateral_drift_mm_s: [0.00002, -0.00001]
+    approach_drift_mm_per_mm: [0.003, -0.002]
+    maximum_drift_mm: 0.15
+    contact_slip_deg_s: 0.002
+    contact_front_tau_s: 0.8
+    # Jialei 2026-11-03: a shift through the slide would move every
+    # material alike and cannot misalign them; ignored for now.
+    refraction_xy_per_gap_mm: [0.0, 0.0]
+  dome_radius_mm: 1.5     # contact radius r = sqrt(2 * R * press depth)
+  chip_thickness_mm: 0.5  # a chip surface is this far above the bare stage top
+  # manipulator z at which the dome meets a surface at the focal plane, per
+  # stamp +- touch_z_sigma. Independent optical focusing does not change this
+  # mechanical contact height or move the chip lower through an optical shift.
+  touch_z: 5.3
+  # The stamp in the light path (Jialei, 2026-10-22): through the glass slide and
+  # the PDMS dome the chip and the film look this much higher, so the focus moves
+  # (a plate of thickness t and index n shifts it by t(1 - 1/n)). Placeholder.
+  optic_shift_mm: 0.3
+  optic_shift_sigma_mm: 0.03
+  through_stamp_contrast: 0.85    # peak sharpness through the stamp, relative
+  # Newton rings: white-light fringes in the air gap under the dome, visible
+  # within several um of contact (one ring per half wavelength of gap)
+  fringe_max_gap_mm: 0.008
+  fringe_wavelength_mm: 0.00055
+  touch_z_sigma: 0.06
+  apex_sigma_mm: 0.08     # dome apex offset from the nominal head point
+  melt_c: 165             # PC film releases onto the chip above this (+- melt_sigma_c)
+  melt_sigma_c: 2.0
+  pickup_first: {hBN: 0.9, Gr: 0.6, WTe2: 0.5}   # chance a bare film picks a flake up
+  pickup_onto_stack: 0.95 # flake under a flake already on the stamp (vdW pick-up)
+  pickup_min_temp_c: 60
+  cold_pickup_factor: 0.3
+  manipulator_sigma_mm: 0.0005
+  crush_depth_mm: 0.4     # pressed deeper than this (holder down or stage up): the dome
+                          # is crushed and the film torn, logged as a collision
+motion:                   # moves take time on the clock (heaters keep going meanwhile)
+  arm_speed_mm_s: 80      # desktop arm travel (v1 G-code F5000 = 83 mm/s)
+  arm_settle_s: 0.3
+  stage_speed_mm_s: 10    # finding & stacking stage, per axis (placeholder)
+  fine_speed_mm_s: 0.5
+  rotation_speed_deg_s: 10
+  focus_speed_mm_s: 1
+  manipulator_speed_mm_s: 2   # stamp holder z (placeholder)
+  # Stamp holder x/y (#181). Long rail travel: owner estimate (2026-11-04) "about
+  # the same as the robot arm" = arm_speed_mm_s; the real speed is unknown. Short
+  # x/y moves (alignment, up to manipulator_fine_below_mm): v1 KST XY max_vel
+  # 0.2 mm/s (v1 molecule_initialize_stamp / molecule_adjust_touching_point).
+  manipulator_travel_speed_mm_s: 80
+  manipulator_fine_speed_mm_s: 0.2
+  manipulator_fine_below_mm: 2.0
+process:
+  restart_loses_arm_position: true   # a restarted lab finds the arms un-homed
+heaters:
+  ambient_c: 22.0
+  tau_s: 60.0             # first-order time constant while heating
+  fan_tau_s: 40.0         # cooling time constant with the fan on (without: tau_s * 3)
+# Note: these numbers are a model to test the control software, not lab rates.
+initial_samples:
+  - {id: chip_001, kind: chip, location: left_chip_1, status: bare, props: {substrate: "SiO2/Si 285nm"}}
+  - {id: chip_002, kind: chip, location: left_chip_2, status: bare, props: {substrate: "SiO2/Si 285nm"}}
+  - {id: chip_003, kind: chip, location: left_chip_3, status: bare, props: {substrate: "SiO2/Si 285nm"}}
+  - {id: chip_004, kind: chip, location: left_chip_4, status: bare, props: {substrate: "SiO2/Si 285nm"}}
+  # material tape on glass slides; the material is known from the slot (no QR on slides)
+  - {id: carrier_gr_01, kind: carrier, location: left_slide_1, status: available,
+     props: {material: Gr}}
+  - {id: carrier_hbn_01, kind: carrier, location: left_slide_2, status: available,
+     props: {material: hBN}}
+  - {id: tape, kind: tape, location: exfoliator, status: fresh, props: {material: null, uses: 0}}
+  # pre-patterned target chips live on the right board, which only arm_right reaches
+  - {id: chip_e01, kind: chip, location: right_chip_1, status: patterned,
+     props: {substrate: "SiO2/Si 285nm", electrodes: "bottom gate + contacts"}}
+  - {id: stamp_01, kind: stamp, location: right_stamp_1, status: fresh, props: {film: PC}}
+  - {id: stamp_02, kind: stamp, location: right_stamp_2, status: fresh, props: {film: PC}}
+  - {id: stamp_03, kind: stamp, location: right_stamp_3, status: fresh, props: {film: PC}}

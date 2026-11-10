@@ -1,0 +1,32 @@
+# The orchestrator sends the hands to exfoliate before the advisor looked the
+# material up (F8, 2026-10-22): the delegation is refused (rule advisor_first),
+# the advisor looks it up, the same delegation passes and the job runs.
+name: advisor_first
+description: exfoliation delegated to the hands before the advisor's experience look-up is
+  refused; after the look-up the same delegation passes.
+turns:
+  - actions:
+      - say: {agent: orchestrator, text: "Eyes first, then the hands exfoliate graphene."}
+      - tool:
+          agent: orchestrator
+          name: update_plan
+          args:
+            note: initial plan
+            plan:
+              - {id: s1, title: Check the bench, owner: eyes}
+              - {id: s2, title: Look up graphene experience, owner: advisor}
+              - {id: s3, title: Exfoliate graphene onto one chip, owner: hands}
+      - delegate: {to: eyes, step: s1, task: "Look at the bench."}
+      - tool: {agent: eyes, name: inspect_bench, args: {}, save_as: look}
+      - done: {agent: eyes, summary: "Bench: {{look._summary}}"}
+      # skipping the advisor: refused
+      - delegate: {to: hands, step: s3, task: "Exfoliate graphene onto one bare chip.", save_as: early}
+      - say: {agent: orchestrator, text: "Delegation to the hands: {{early._status}}: {{early._summary}}"}
+      - delegate: {to: advisor, step: s2, task: "Look up the lab's experience for graphene."}
+      - tool: {agent: advisor, name: get_experience, args: {materials: [Gr]}, save_as: experience}
+      - done: {agent: advisor, summary: "Experience: {{experience._summary}}"}
+      - delegate: {to: hands, step: s3, task: "Exfoliate graphene onto one bare chip."}
+      - tool: {agent: hands, name: exfoliate_chips, args: {material: Gr, num_chips: 1}, save_as: ex}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex.job_id}}", timeout_s: 600}, save_as: w}
+      - done: {agent: hands, summary: "Exfoliation: {{w._summary}}"}
+      - say: {agent: orchestrator, text: "Done: {{w._summary}}"}

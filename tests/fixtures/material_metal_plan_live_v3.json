@@ -1,0 +1,1779 @@
+{
+  "scope": "Minimal simulated v3 regression inputs and recorded completed-preparation ledger evidence. Image paths are redacted references; no hardware is executed by this fixture.",
+  "source_recording_sha256": "5f7c897fbd902559426076d0d64aa6b2ff66986c66b3f5864b554b7d6ab29281",
+  "source_event_ids": {
+    "initial_plan": 22,
+    "requirements": 118,
+    "bad_refinement": 170,
+    "bad_plan": 171,
+    "correction_attempt": 15184,
+    "correction_refusal": 15185,
+    "preparation_link": 15205,
+    "prepared": 18065,
+    "process": 18188,
+    "completion_refusal": 18202
+  },
+  "initial_plan": [
+    {
+      "id": "s1",
+      "title": "Inspect bench, inventory, and instruments",
+      "owner": "eyes",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s2",
+      "title": "Review experiment parameters and reactor scheme",
+      "owner": "advisor",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s3",
+      "title": "Prepare or verify ordinary hBN and graphene source inputs",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s4",
+      "title": "Screen photographed reactor input flakes",
+      "owner": "picker",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": "screen",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s5",
+      "title": "Assess local pickup isolation and confirm top-first pair",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s6",
+      "title": "Confirm exact hBN/graphene pair",
+      "owner": "picker",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": "confirm",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s7",
+      "title": "Prepare material-metal reactor carrier",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s8",
+      "title": "Run reaction, recover carrier cold, and inspect outcome",
+      "owner": "reactor",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": {
+        "chip_id": "reactor_chip_01",
+        "disposition": "cold_storage",
+        "temperature_target_c": null,
+        "flow_target_sccm": 0.0,
+        "rationale": "Finish the simulated experiment with heater off, zero gas flow, and the carrier returned to reactor storage."
+      }
+    }
+  ],
+  "requirements": {
+    "project_id": "prj_8bb3216dca14",
+    "requirements": {
+      "reactive_material": "Gr",
+      "metal": "Pd",
+      "protective_material": "hBN",
+      "protective_role": "nonreactive_pickup_and_protection",
+      "substrate": "silicon",
+      "assembly_order": "hBN/reactive_material/metal/silicon",
+      "save_images": true,
+      "retain_source_provenance": true,
+      "reaction_kind": "material_metal"
+    },
+    "instruction_id": "ins_cd21e64bf09f",
+    "original_request": "In the simulated lab, prepare and run hBN/Gr/Pd/silicon. hBN must remain topmost and nonreactive. stamp_01 carries mica. reactor_chip_01 already has Pd deposited on silicon, preparation pd-sim-01 by simulation-operator, and is in reactor storage. Use ordinary source stock, retain images and provenance, meet the configured qualitative simulation goal, and finish cold in reactor storage. This is simulation acceptance; real chemistry remains unverified. If a requirement cannot be met, preserve the evidence and report it honestly.",
+    "adopted_advisor_event_id": null,
+    "adopted_advisor_response": null,
+    "revision_reason": null,
+    "previous_event_id": null
+  },
+  "bad_refinement_args": {
+    "expected_revision": 1,
+    "updates": [
+      {
+        "step_id": "s3",
+        "fields": {
+          "title": "Exfoliate hBN from ordinary source stock",
+          "operation": "exfoliate_chips",
+          "materials": [
+            "hBN"
+          ],
+          "operation_args": {
+            "material": "hBN",
+            "from_carrier": "carrier_hbn_01",
+            "target_temp_c": 50,
+            "dwell_s": 30,
+            "num_massages": 2,
+            "press_depth_mm": 0.2,
+            "peel_speed": 200,
+            "peel_angle_deg": 30,
+            "purpose": "secure"
+          },
+          "sample_outcomes": [
+            {
+              "sample_id": "carrier_hbn_01",
+              "status": "available",
+              "in_storage": true
+            }
+          ]
+        }
+      },
+      {
+        "step_id": "s4",
+        "fields": {
+          "title": "Screen photographed reactor input flakes",
+          "experiment_stage": "screen"
+        }
+      },
+      {
+        "step_id": "s5",
+        "fields": {
+          "title": "Assess local pickup isolation and confirm top-first pair",
+          "operation": "assess_reactor_inputs",
+          "materials": [
+            "hBN",
+            "Gr"
+          ],
+          "sample_outcomes": [
+            {
+              "sample_id": "reactor_chip_01",
+              "status": "bare",
+              "in_storage": true
+            }
+          ]
+        }
+      },
+      {
+        "step_id": "s7",
+        "fields": {
+          "title": "Prepare hBN/Gr pair on the Pd/silicon reactor carrier",
+          "operation": "prepare_reactor_pair",
+          "materials": [
+            "hBN",
+            "Gr"
+          ],
+          "sample_outcomes": [
+            {
+              "sample_id": "reactor_chip_01",
+              "status": "reactor_pair_prepared",
+              "in_storage": true
+            }
+          ]
+        }
+      },
+      {
+        "step_id": "s8",
+        "fields": {
+          "title": "Run material-metal reaction and recover carrier cold",
+          "operation": "reactor_material_metal",
+          "materials": [
+            "hBN",
+            "Gr"
+          ],
+          "reactor_outcome": {
+            "chip_id": "reactor_chip_01",
+            "disposition": "cold_storage",
+            "temperature_target_c": null,
+            "flow_target_sccm": 0,
+            "rationale": "Finish the simulated experiment with heater off, zero gas flow, and the Pd/silicon carrier returned to reactor storage."
+          }
+        }
+      }
+    ],
+    "additions": [
+      {
+        "title": "Exfoliate graphene from ordinary source stock",
+        "owner": "hands",
+        "operation": "exfoliate_chips",
+        "materials": [
+          "Gr"
+        ],
+        "operation_args": {
+          "material": "Gr",
+          "from_carrier": "carrier_gr_01",
+          "target_temp_c": 50,
+          "dwell_s": 30,
+          "num_massages": 2,
+          "press_depth_mm": 0.2,
+          "peel_speed": 200,
+          "peel_angle_deg": 30,
+          "purpose": "secure"
+        },
+        "sample_outcomes": [
+          {
+            "sample_id": "carrier_gr_01",
+            "status": "available",
+            "in_storage": true
+          }
+        ],
+        "after_step_id": "s3"
+      },
+      {
+        "title": "Search hBN exfoliation chip and save optical images",
+        "owner": "hands",
+        "operation": "search_chip",
+        "materials": [
+          "hBN"
+        ],
+        "sample_outcomes": [],
+        "after_step_id": "s3"
+      },
+      {
+        "title": "Search graphene exfoliation chip and save optical images",
+        "owner": "hands",
+        "operation": "search_chip",
+        "materials": [
+          "Gr"
+        ],
+        "sample_outcomes": [],
+        "after_step_id": "s4"
+      },
+      {
+        "title": "Prepare material-metal carrier from confirmed pair",
+        "owner": "hands",
+        "operation": "prepare_material_metal",
+        "materials": [
+          "hBN",
+          "Gr"
+        ],
+        "sample_outcomes": [
+          {
+            "sample_id": "reactor_chip_01",
+            "status": "bare",
+            "in_storage": true
+          }
+        ],
+        "after_step_id": "s6"
+      }
+    ],
+    "note": "Repair the plan while preserving the established experiment route: separate exfoliation and search, local assessment, pair preparation, material-metal preparation, and guarded material-metal reaction with cold storage."
+  },
+  "bad_plan": [
+    {
+      "id": "s1",
+      "title": "Inspect bench, inventory, and instruments",
+      "owner": "eyes",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s2",
+      "title": "Review experiment parameters and reactor scheme",
+      "owner": "advisor",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s3",
+      "title": "Exfoliate hBN from ordinary source stock",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "exfoliate_chips",
+      "sample_outcomes": [
+        {
+          "sample_id": "carrier_hbn_01",
+          "location": null,
+          "status": "available",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "material": "hBN",
+        "from_carrier": "carrier_hbn_01",
+        "target_temp_c": 50,
+        "dwell_s": 30,
+        "num_massages": 2,
+        "press_depth_mm": 0.2,
+        "peel_speed": 200,
+        "peel_angle_deg": 30,
+        "purpose": "secure"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s9",
+      "title": "Exfoliate graphene from ordinary source stock",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "exfoliate_chips",
+      "sample_outcomes": [
+        {
+          "sample_id": "carrier_gr_01",
+          "location": null,
+          "status": "available",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "material": "Gr",
+        "from_carrier": "carrier_gr_01",
+        "target_temp_c": 50,
+        "dwell_s": 30,
+        "num_massages": 2,
+        "press_depth_mm": 0.2,
+        "peel_speed": 200,
+        "peel_angle_deg": 30,
+        "purpose": "secure"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s10",
+      "title": "Search hBN exfoliation chip and save optical images",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "search_chip",
+      "sample_outcomes": [],
+      "materials": [
+        "hBN"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s4",
+      "title": "Screen photographed reactor input flakes",
+      "owner": "picker",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": "screen",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s11",
+      "title": "Search graphene exfoliation chip and save optical images",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "search_chip",
+      "sample_outcomes": [],
+      "materials": [
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s5",
+      "title": "Assess local pickup isolation and confirm top-first pair",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "assess_reactor_inputs",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "bare",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s6",
+      "title": "Confirm exact hBN/graphene pair",
+      "owner": "picker",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": "confirm",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s12",
+      "title": "Prepare material-metal carrier from confirmed pair",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "prepare_material_metal",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "bare",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s7",
+      "title": "Prepare hBN/Gr pair on the Pd/silicon reactor carrier",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "prepare_reactor_pair",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "reactor_pair_prepared",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s8",
+      "title": "Run material-metal reaction and recover carrier cold",
+      "owner": "reactor",
+      "status": "pending",
+      "note": "",
+      "operation": "reactor_material_metal",
+      "sample_outcomes": [],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": {
+        "chip_id": "reactor_chip_01",
+        "disposition": "cold_storage",
+        "temperature_target_c": null,
+        "flow_target_sccm": 0.0,
+        "rationale": "Finish the simulated experiment with heater off, zero gas flow, and the Pd/silicon carrier returned to reactor storage."
+      }
+    }
+  ],
+  "bound_plan": [
+    {
+      "id": "s1",
+      "title": "Inspect bench, inventory, and instruments",
+      "owner": "eyes",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s2",
+      "title": "Review experiment parameters and reactor scheme",
+      "owner": "advisor",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s3",
+      "title": "Exfoliate hBN from ordinary source stock",
+      "owner": "hands",
+      "status": "done",
+      "note": "",
+      "operation": "exfoliate_chips",
+      "sample_outcomes": [
+        {
+          "sample_id": "carrier_hbn_01",
+          "location": null,
+          "status": "available",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "material": "hBN",
+        "from_carrier": "carrier_hbn_01",
+        "target_temp_c": 50,
+        "dwell_s": 30,
+        "num_massages": 2,
+        "press_depth_mm": 0.2,
+        "peel_speed": 200,
+        "peel_angle_deg": 30,
+        "purpose": "secure"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s9",
+      "title": "Exfoliate graphene from ordinary source stock",
+      "owner": "hands",
+      "status": "done",
+      "note": "",
+      "operation": "exfoliate_chips",
+      "sample_outcomes": [
+        {
+          "sample_id": "carrier_gr_01",
+          "location": null,
+          "status": "available",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "material": "Gr",
+        "from_carrier": "carrier_gr_01",
+        "target_temp_c": 50,
+        "dwell_s": 30,
+        "num_massages": 2,
+        "press_depth_mm": 0.2,
+        "peel_speed": 200,
+        "peel_angle_deg": 30,
+        "purpose": "secure"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s10",
+      "title": "Search hBN chip_001 and save optical images",
+      "owner": "hands",
+      "status": "done",
+      "note": "",
+      "operation": "search_chip",
+      "sample_outcomes": [
+        {
+          "sample_id": "chip_001",
+          "location": null,
+          "status": "searched",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "chip_id": "chip_001",
+        "revisit_only": false
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s4",
+      "title": "Screen photographed reactor input flakes",
+      "owner": "picker",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": "screen",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s11",
+      "title": "Search graphene chip_002 and save optical images",
+      "owner": "hands",
+      "status": "done",
+      "note": "",
+      "operation": "search_chip",
+      "sample_outcomes": [
+        {
+          "sample_id": "chip_002",
+          "location": null,
+          "status": "searched",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "chip_id": "chip_002",
+        "revisit_only": false
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s5",
+      "title": "Assess local pickup isolation and confirm top-first pair",
+      "owner": "hands",
+      "status": "done",
+      "note": "",
+      "operation": "assess_reactor_inputs",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "bare",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "hbn_candidates": [
+          "chip_001_f012",
+          "chip_001_f005",
+          "chip_001_f008"
+        ],
+        "gr_candidates": [
+          "chip_002_f001",
+          "chip_002_f005",
+          "chip_002_f003",
+          "chip_002_f004"
+        ],
+        "reactor_chip_id": "reactor_chip_01"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s6",
+      "title": "Confirm exact hBN/graphene pair",
+      "owner": "picker",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": "confirm",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s13",
+      "title": "Assess remaining graphene candidates locally",
+      "owner": "hands",
+      "status": "done",
+      "note": "",
+      "operation": "assess_reactor_inputs",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "bare",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "hbn_candidates": [
+          "chip_001_f012"
+        ],
+        "gr_candidates": [
+          "chip_002_f002",
+          "chip_002_f006",
+          "chip_002_f007",
+          "chip_002_f008",
+          "chip_002_f009",
+          "chip_002_f010",
+          "chip_002_f011",
+          "chip_002_f012",
+          "chip_002_f013",
+          "chip_002_f014",
+          "chip_002_f015",
+          "chip_002_f016",
+          "chip_002_f017"
+        ],
+        "reactor_chip_id": "reactor_chip_01"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s14",
+      "title": "Confirm exact isolated top-first hBN/Gr pair",
+      "owner": "picker",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": "confirm",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s12",
+      "title": "Prepare material-metal carrier from confirmed pair",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "prepare_material_metal",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "bare",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "reactor_chip_id": "reactor_chip_01",
+        "hbn_flake_id": "chip_001_f012",
+        "gr_flake_id": "chip_002_f014",
+        "stamp_id": "stamp_01",
+        "metal": "Pd",
+        "preparation_id": "pd-sim-01"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s7",
+      "title": "Prepare hBN/Gr pair on the Pd/silicon reactor carrier",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "prepare_reactor_pair",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "reactor_pair_prepared",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "reactor_chip_id": "reactor_chip_01",
+        "hbn_flake_id": "chip_001_f012",
+        "gr_flake_id": "chip_002_f014"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s8",
+      "title": "Run material-metal reaction and recover carrier cold",
+      "owner": "reactor",
+      "status": "pending",
+      "note": "",
+      "operation": "reactor_material_metal",
+      "sample_outcomes": [],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": {
+        "chip_id": "reactor_chip_01",
+        "disposition": "cold_storage",
+        "temperature_target_c": null,
+        "flow_target_sccm": 0.0,
+        "rationale": "Finish the simulated experiment with heater off, zero gas flow, and the Pd/silicon carrier returned to reactor storage."
+      }
+    }
+  ],
+  "correction_attempt_args": {
+    "expected_revision": 6,
+    "updates": [
+      {
+        "step_id": "s12",
+        "fields": {
+          "title": "Prepare confirmed hBN/Gr pair on Pd/silicon carrier",
+          "operation_args": {
+            "reactor_chip_id": "reactor_chip_01",
+            "hbn_flake_id": "chip_001_f012",
+            "gr_flake_id": "chip_002_f014",
+            "stamp_id": "stamp_01",
+            "metal": "Pd",
+            "preparation_id": "pd-sim-01"
+          },
+          "sample_outcomes": [
+            {
+              "sample_id": "reactor_chip_01",
+              "status": "material_metal_prepared",
+              "in_storage": true
+            }
+          ]
+        }
+      },
+      {
+        "step_id": "s7",
+        "fields": {
+          "operation_args": {
+            "reactor_chip_id": "reactor_chip_01",
+            "hbn_flake_id": "chip_001_f012",
+            "gr_flake_id": "chip_002_f014"
+          },
+          "sample_outcomes": [
+            {
+              "sample_id": "reactor_chip_01",
+              "status": "reactor_pair_prepared",
+              "in_storage": true
+            }
+          ]
+        }
+      }
+    ],
+    "note": "Bind the confirmed isolated pair and recorded mica/Pd provenance to the material-metal preparation while retaining the established pair-preparation obligation."
+  },
+  "job": {
+    "id": "run_7eb25db35985",
+    "flow": "prepare_material_metal",
+    "status": "succeeded",
+    "params": {
+      "flake_ids": [
+        "chip_001_f012",
+        "chip_002_f014"
+      ],
+      "target_chip_id": "reactor_chip_01",
+      "target_xy_mm": [
+        1.25,
+        5.0
+      ],
+      "design_path": null,
+      "pickup_temp_c": 80.0,
+      "drop_temp_c": 135.0,
+      "melt_temp_c": 150.0,
+      "stamp_id": "stamp_01",
+      "stamp_slot": "right_stamp_1",
+      "flake_chips": {
+        "chip_001_f012": "chip_001",
+        "chip_002_f014": "chip_002"
+      },
+      "materials": {
+        "chip_001_f012": "hBN",
+        "chip_002_f014": "Gr"
+      },
+      "home_slots": {
+        "chip_001": "mid_chip_1",
+        "chip_002": "mid_chip_2",
+        "reactor_chip_01": "right_chip_2"
+      },
+      "stamp_swaps": [],
+      "project_id": "prj_8bb3216dca14",
+      "protocol_id": "qualitative-material-metal-v1",
+      "fixture_instruction_id": null,
+      "reactor_home_slot": "reactor_chip_slot_1",
+      "requirements_event_id": 118,
+      "source_chip_ids": {
+        "chip_001_f012": "chip_001",
+        "chip_002_f014": "chip_002"
+      },
+      "images": [],
+      "receipt_inputs": {
+        "project_id": "prj_8bb3216dca14",
+        "requirements_event_id": 118,
+        "chip_id": "reactor_chip_01",
+        "top_first_flake_ids": [
+          "chip_001_f012",
+          "chip_002_f014"
+        ],
+        "layer_order": [
+          "hBN",
+          "Gr",
+          "Pd",
+          "silicon"
+        ],
+        "stamp_id": "stamp_01",
+        "stamp_film": "mica",
+        "source_chip_ids": {
+          "chip_001_f012": "chip_001",
+          "chip_002_f014": "chip_002"
+        },
+        "metal_coating": {
+          "metal": "Pd",
+          "substrate": "silicon",
+          "preparation_id": "pd-sim-01",
+          "prepared_by": "simulation-operator",
+          "source": "operator_report",
+          "instruction_id": "ins_cd21e64bf09f",
+          "ts": 1793141785.266484
+        },
+        "source_images": {
+          "chip_001_f012": {
+            "20x": "recorded-v3/images/microscope/microscope_000003.png",
+            "100x": "recorded-v3/images/microscope/microscope_000004.png"
+          },
+          "chip_002_f014": {
+            "20x": "recorded-v3/images/microscope/microscope_000042.png",
+            "100x": "recorded-v3/images/microscope/microscope_000043.png"
+          }
+        },
+        "protocol_id": "qualitative-material-metal-v1",
+        "scope": "device_simulation",
+        "model_assumptions": {
+          "protocol_id": "qualitative-material-metal-v1",
+          "provenance": "uncalibrated_software_assumptions",
+          "PC": {
+            "pickup_c": 90.0,
+            "release_c": 170.0,
+            "release_band_c": 3.0,
+            "pickup_probability": 0.92,
+            "release_probability": 0.9,
+            "support_retained_on_stamp": false
+          },
+          "mica": {
+            "pickup_c": 80.0,
+            "release_c": 150.0,
+            "release_band_c": 3.0,
+            "pickup_probability": 0.92,
+            "release_probability": 0.9,
+            "support_retained_on_stamp": true
+          },
+          "temperature_c": 300.0,
+          "flow_sccm": 50.0,
+          "duration_s": 180.0,
+          "activation_temperature_c": 250.0,
+          "activation_flow_sccm": 10.0,
+          "characteristic_time_s": 60.0,
+          "success_probability": 0.9,
+          "unsuccessful_max_progress": 0.25,
+          "minimum_progress": 0.8,
+          "observation_available": true
+        },
+        "simulated_motion_verified": true,
+        "physical_motion_verified": false,
+        "chemistry_verified": false
+      }
+    }
+  },
+  "samples": [
+    {
+      "id": "chip_001",
+      "kind": "chip",
+      "location": "mid_chip_1",
+      "status": "searched",
+      "props": {
+        "substrate": "SiO2/Si 285nm",
+        "pose": {
+          "x": 475.30917005690435,
+          "y": 179.70918882001158,
+          "z": 0.0,
+          "rotation": 1.0276080722740781
+        },
+        "location_uncertain": false,
+        "last_seen": null,
+        "material": "hBN",
+        "from_carrier": "carrier_hbn_01",
+        "home_slot": "mid_chip_1",
+        "pose_on_stage": {
+          "x": 675.1622183173965,
+          "y": 339.87364858559044,
+          "z": 0.0,
+          "rotation": -0.015149595960281379
+        },
+        "rotation_deg": 0.8546,
+        "corner_stage_xy": [
+          4.6455,
+          85.1805
+        ],
+        "corner_image": "recorded-v3/images/microscope/microscope_000134.png"
+      }
+    },
+    {
+      "id": "chip_002",
+      "kind": "chip",
+      "location": "mid_chip_2",
+      "status": "searched",
+      "props": {
+        "substrate": "SiO2/Si 285nm",
+        "pose": {
+          "x": 510.24599052936105,
+          "y": 179.64279290263468,
+          "z": 0.0,
+          "rotation": 0.21144680931166676
+        },
+        "location_uncertain": false,
+        "last_seen": null,
+        "material": "Gr",
+        "from_carrier": "carrier_gr_01",
+        "home_slot": "mid_chip_2",
+        "pose_on_stage": {
+          "x": 674.6286781663097,
+          "y": 339.8607227902318,
+          "z": 0.0,
+          "rotation": 0.17961300011674297
+        },
+        "rotation_deg": 0.2733,
+        "corner_stage_xy": [
+          5.2417,
+          85.0683
+        ],
+        "corner_image": "recorded-v3/images/microscope/microscope_000141.png"
+      }
+    },
+    {
+      "id": "chip_001_f012",
+      "kind": "flake",
+      "location": "reactor_chip_01",
+      "status": "stacked",
+      "props": {
+        "material": "hBN",
+        "chip_id": "chip_001",
+        "thickness_label": "0-10",
+        "labels": {
+          "10x": "0-10",
+          "20x": "0-10",
+          "100x": "0-10"
+        },
+        "area_um2": 1509.9,
+        "stage_xy": [
+          0.4199,
+          79.7009
+        ],
+        "rel_corner_mm": [
+          4.2968,
+          5.4212
+        ],
+        "confidence": 0.99,
+        "images": {
+          "20x": "recorded-v3/images/microscope/microscope_000003.png",
+          "100x": "recorded-v3/images/microscope/microscope_000004.png"
+        },
+        "sim_id": "synthetic_flake_0a4a84bc9a63b2f4fd99",
+        "image_source": "simulated",
+        "stage_from_corner_mm": [
+          -4.2629,
+          -5.4479
+        ],
+        "reactor_pickup_assessment": {
+          "flake_id": "chip_001_f012",
+          "source_chip_id": "chip_001",
+          "clear": true,
+          "neighbours_per_view": [
+            0,
+            0,
+            0
+          ],
+          "clear_radius_mm": 0.85,
+          "nearest_other_mm": null,
+          "source": "focused_optical_neighbourhood",
+          "timestamp": 1800001376.1950176,
+          "job_id": "run_7eb25db35985",
+          "images": [
+            "recorded-v3/images/microscope/microscope_000137.png"
+          ]
+        },
+        "material_placement": {
+          "flake": {
+            "id": "chip_001_f012",
+            "material": "hBN",
+            "layers": 17,
+            "source_chip_id": "chip_001",
+            "batch_id": "tape_segment_1_use_0",
+            "outline_mm": [
+              [
+                -0.7280418892255234,
+                0.437510683675592
+              ],
+              [
+                -0.718456038048201,
+                0.4101136523132908
+              ],
+              [
+                -0.6894470874075959,
+                0.40029621185825615
+              ],
+              [
+                -0.6717964787403724,
+                0.40821985290863894
+              ],
+              [
+                -0.6738963256558539,
+                0.42598458345675394
+              ],
+              [
+                -0.7023623819166255,
+                0.43984512250475566
+              ]
+            ]
+          },
+          "target_center_mm": [
+            0.014655405728680779,
+            0.014394552488447683
+          ],
+          "rotation_deg": -0.642693214565064
+        },
+        "geometry_area_um2": 1511.6912121003659,
+        "measured_area_um2": 1509.9
+      }
+    },
+    {
+      "id": "chip_002_f014",
+      "kind": "flake",
+      "location": "reactor_chip_01",
+      "status": "stacked",
+      "props": {
+        "material": "Gr",
+        "chip_id": "chip_002",
+        "thickness_label": "bilayer",
+        "labels": {
+          "10x": "bilayer",
+          "20x": "bilayer",
+          "100x": "bilayer"
+        },
+        "area_um2": 1842.2,
+        "stage_xy": [
+          5.1231,
+          80.3837
+        ],
+        "rel_corner_mm": [
+          0.1438,
+          4.6719
+        ],
+        "confidence": 0.85,
+        "images": {
+          "20x": "recorded-v3/images/microscope/microscope_000042.png",
+          "100x": "recorded-v3/images/microscope/microscope_000043.png"
+        },
+        "sim_id": "synthetic_flake_8001fb62d790563b3497",
+        "image_source": "simulated",
+        "stage_from_corner_mm": [
+          -0.0384,
+          -4.674
+        ],
+        "reactor_pickup_assessment": {
+          "flake_id": "chip_002_f014",
+          "source_chip_id": "chip_002",
+          "clear": true,
+          "neighbours_per_view": [
+            0,
+            0,
+            0
+          ],
+          "clear_radius_mm": 0.85,
+          "nearest_other_mm": null,
+          "source": "focused_optical_neighbourhood",
+          "timestamp": 1800001712.1111398,
+          "job_id": "run_7eb25db35985",
+          "images": [
+            "recorded-v3/images/microscope/microscope_000144.png"
+          ]
+        },
+        "material_placement": {
+          "flake": {
+            "id": "chip_002_f014",
+            "material": "Gr",
+            "layers": 2,
+            "source_chip_id": "chip_002",
+            "batch_id": "tape_segment_2_use_0",
+            "outline_mm": [
+              [
+                -4.8960255962157255,
+                -0.29949159660016444
+              ],
+              [
+                -4.887325864897214,
+                -0.3184620371231557
+              ],
+              [
+                -4.866368902970205,
+                -0.3330207866715279
+              ],
+              [
+                -4.83881657510614,
+                -0.3438084276282665
+              ],
+              [
+                -4.818193504531909,
+                -0.3391191644204596
+              ],
+              [
+                -4.822822848186237,
+                -0.32258552104930327
+              ],
+              [
+                -4.849194672149769,
+                -0.30950464998704325
+              ],
+              [
+                -4.872405489199863,
+                -0.2991311330656076
+              ]
+            ]
+          },
+          "target_center_mm": [
+            0.003484773030929429,
+            0.008275325190611959
+          ],
+          "rotation_deg": -1.2000532576592104
+        },
+        "geometry_area_um2": 1881.1599047776187,
+        "measured_area_um2": 1842.2
+      }
+    },
+    {
+      "id": "reactor_chip_01",
+      "kind": "chip",
+      "location": "reactor_chip_slot_1",
+      "status": "material_metal_prepared",
+      "props": {
+        "reactor_substrate": true,
+        "size_mm": [
+          2.5,
+          10
+        ],
+        "preparation": "synthetic seed representing a manually cut chip",
+        "image_source": "simulated",
+        "metal_coating": {
+          "metal": "Pd",
+          "substrate": "silicon",
+          "preparation_id": "pd-sim-01",
+          "prepared_by": "simulation-operator",
+          "source": "operator_report",
+          "instruction_id": "ins_cd21e64bf09f",
+          "ts": 1793141785.266484
+        },
+        "pose": {
+          "x": 1320.404918872428,
+          "y": 139.94464079257068,
+          "z": 0.0,
+          "rotation": 0.5591831291877841
+        },
+        "location_uncertain": false,
+        "last_seen": null,
+        "home_slot": "reactor_chip_slot_1",
+        "pose_on_stage": {
+          "x": 674.6427173373409,
+          "y": 339.7522436589628,
+          "z": 0.0,
+          "rotation": 1.2409091821088931
+        },
+        "rotation_deg": 1.3861,
+        "corner_stage_xy": [
+          1.5477,
+          85.3152
+        ],
+        "corner_image": "recorded-v3/images/microscope/microscope_000146.png",
+        "material_metal_preparation": {
+          "project_id": "prj_8bb3216dca14",
+          "requirements_event_id": 118,
+          "chip_id": "reactor_chip_01",
+          "top_first_flake_ids": [
+            "chip_001_f012",
+            "chip_002_f014"
+          ],
+          "layer_order": [
+            "hBN",
+            "Gr",
+            "Pd",
+            "silicon"
+          ],
+          "stamp_id": "stamp_01",
+          "stamp_film": "mica",
+          "source_chip_ids": {
+            "chip_001_f012": "chip_001",
+            "chip_002_f014": "chip_002"
+          },
+          "metal_coating": {
+            "metal": "Pd",
+            "substrate": "silicon",
+            "preparation_id": "pd-sim-01",
+            "prepared_by": "simulation-operator",
+            "source": "operator_report",
+            "instruction_id": "ins_cd21e64bf09f",
+            "ts": 1793141785.266484
+          },
+          "source_images": {
+            "chip_001_f012": {
+              "20x": "recorded-v3/images/microscope/microscope_000003.png",
+              "100x": "recorded-v3/images/microscope/microscope_000004.png"
+            },
+            "chip_002_f014": {
+              "20x": "recorded-v3/images/microscope/microscope_000042.png",
+              "100x": "recorded-v3/images/microscope/microscope_000043.png"
+            }
+          },
+          "protocol_id": "qualitative-material-metal-v1",
+          "scope": "device_simulation",
+          "model_assumptions": {
+            "protocol_id": "qualitative-material-metal-v1",
+            "provenance": "uncalibrated_software_assumptions",
+            "PC": {
+              "pickup_c": 90.0,
+              "release_c": 170.0,
+              "release_band_c": 3.0,
+              "pickup_probability": 0.92,
+              "release_probability": 0.9,
+              "support_retained_on_stamp": false
+            },
+            "mica": {
+              "pickup_c": 80.0,
+              "release_c": 150.0,
+              "release_band_c": 3.0,
+              "pickup_probability": 0.92,
+              "release_probability": 0.9,
+              "support_retained_on_stamp": true
+            },
+            "temperature_c": 300.0,
+            "flow_sccm": 50.0,
+            "duration_s": 180.0,
+            "activation_temperature_c": 250.0,
+            "activation_flow_sccm": 10.0,
+            "characteristic_time_s": 60.0,
+            "success_probability": 0.9,
+            "unsuccessful_max_progress": 0.25,
+            "minimum_progress": 0.8,
+            "observation_available": true
+          },
+          "simulated_motion_verified": true,
+          "physical_motion_verified": false,
+          "chemistry_verified": false,
+          "preparation_job_id": "run_7eb25db35985",
+          "release_images": [
+            "recorded-v3/images/microscope/microscope_000149.png"
+          ],
+          "placements": {
+            "chip_002_f014": {
+              "flake": {
+                "id": "chip_002_f014",
+                "material": "Gr",
+                "layers": 2,
+                "source_chip_id": "chip_002",
+                "batch_id": "tape_segment_2_use_0",
+                "outline_mm": [
+                  [
+                    -4.8960255962157255,
+                    -0.29949159660016444
+                  ],
+                  [
+                    -4.887325864897214,
+                    -0.3184620371231557
+                  ],
+                  [
+                    -4.866368902970205,
+                    -0.3330207866715279
+                  ],
+                  [
+                    -4.83881657510614,
+                    -0.3438084276282665
+                  ],
+                  [
+                    -4.818193504531909,
+                    -0.3391191644204596
+                  ],
+                  [
+                    -4.822822848186237,
+                    -0.32258552104930327
+                  ],
+                  [
+                    -4.849194672149769,
+                    -0.30950464998704325
+                  ],
+                  [
+                    -4.872405489199863,
+                    -0.2991311330656076
+                  ]
+                ]
+              },
+              "target_center_mm": [
+                0.003484773030929429,
+                0.008275325190611959
+              ],
+              "rotation_deg": -1.2000532576592104
+            },
+            "chip_001_f012": {
+              "flake": {
+                "id": "chip_001_f012",
+                "material": "hBN",
+                "layers": 17,
+                "source_chip_id": "chip_001",
+                "batch_id": "tape_segment_1_use_0",
+                "outline_mm": [
+                  [
+                    -0.7280418892255234,
+                    0.437510683675592
+                  ],
+                  [
+                    -0.718456038048201,
+                    0.4101136523132908
+                  ],
+                  [
+                    -0.6894470874075959,
+                    0.40029621185825615
+                  ],
+                  [
+                    -0.6717964787403724,
+                    0.40821985290863894
+                  ],
+                  [
+                    -0.6738963256558539,
+                    0.42598458345675394
+                  ],
+                  [
+                    -0.7023623819166255,
+                    0.43984512250475566
+                  ]
+                ]
+              },
+              "target_center_mm": [
+                0.014655405728680779,
+                0.014394552488447683
+              ],
+              "rotation_deg": -0.642693214565064
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "stamp_01",
+      "kind": "stamp",
+      "location": "right_stamp_1",
+      "status": "used",
+      "props": {
+        "film": "mica",
+        "support": {
+          "film_type": "mica",
+          "instruction_id": "ins_cd21e64bf09f",
+          "source": "operator_report",
+          "ts": 1793141783.139436
+        },
+        "support_history": [
+          {
+            "film_type": "mica",
+            "instruction_id": "ins_cd21e64bf09f",
+            "source": "operator_report",
+            "ts": 1793141783.139436
+          }
+        ],
+        "pose": {
+          "x": 864.996935989964,
+          "y": 196.2157467551415,
+          "z": 0.0,
+          "rotation": -0.07167955723758757
+        },
+        "location_uncertain": false,
+        "last_seen": null,
+        "optical_shift_mm": 0.3,
+        "touch_z": 4.9856,
+        "stack": []
+      }
+    }
+  ],
+  "prepared_event": {
+    "chip_id": "reactor_chip_01",
+    "material_metal_preparation": {
+      "project_id": "prj_8bb3216dca14",
+      "requirements_event_id": 118,
+      "chip_id": "reactor_chip_01",
+      "top_first_flake_ids": [
+        "chip_001_f012",
+        "chip_002_f014"
+      ],
+      "layer_order": [
+        "hBN",
+        "Gr",
+        "Pd",
+        "silicon"
+      ],
+      "stamp_id": "stamp_01",
+      "stamp_film": "mica",
+      "source_chip_ids": {
+        "chip_001_f012": "chip_001",
+        "chip_002_f014": "chip_002"
+      },
+      "metal_coating": {
+        "metal": "Pd",
+        "substrate": "silicon",
+        "preparation_id": "pd-sim-01",
+        "prepared_by": "simulation-operator",
+        "source": "operator_report",
+        "instruction_id": "ins_cd21e64bf09f",
+        "ts": 1793141785.266484
+      },
+      "source_images": {
+        "chip_001_f012": {
+          "20x": "recorded-v3/images/microscope/microscope_000003.png",
+          "100x": "recorded-v3/images/microscope/microscope_000004.png"
+        },
+        "chip_002_f014": {
+          "20x": "recorded-v3/images/microscope/microscope_000042.png",
+          "100x": "recorded-v3/images/microscope/microscope_000043.png"
+        }
+      },
+      "protocol_id": "qualitative-material-metal-v1",
+      "scope": "device_simulation",
+      "model_assumptions": {
+        "protocol_id": "qualitative-material-metal-v1",
+        "provenance": "uncalibrated_software_assumptions",
+        "PC": {
+          "pickup_c": 90.0,
+          "release_c": 170.0,
+          "release_band_c": 3.0,
+          "pickup_probability": 0.92,
+          "release_probability": 0.9,
+          "support_retained_on_stamp": false
+        },
+        "mica": {
+          "pickup_c": 80.0,
+          "release_c": 150.0,
+          "release_band_c": 3.0,
+          "pickup_probability": 0.92,
+          "release_probability": 0.9,
+          "support_retained_on_stamp": true
+        },
+        "temperature_c": 300.0,
+        "flow_sccm": 50.0,
+        "duration_s": 180.0,
+        "activation_temperature_c": 250.0,
+        "activation_flow_sccm": 10.0,
+        "characteristic_time_s": 60.0,
+        "success_probability": 0.9,
+        "unsuccessful_max_progress": 0.25,
+        "minimum_progress": 0.8,
+        "observation_available": true
+      },
+      "simulated_motion_verified": true,
+      "physical_motion_verified": false,
+      "chemistry_verified": false,
+      "preparation_job_id": "run_7eb25db35985",
+      "release_images": [
+        "recorded-v3/images/microscope/microscope_000149.png"
+      ],
+      "placements": {
+        "chip_002_f014": {
+          "flake": {
+            "id": "chip_002_f014",
+            "material": "Gr",
+            "layers": 2,
+            "source_chip_id": "chip_002",
+            "batch_id": "tape_segment_2_use_0",
+            "outline_mm": [
+              [
+                -4.8960255962157255,
+                -0.29949159660016444
+              ],
+              [
+                -4.887325864897214,
+                -0.3184620371231557
+              ],
+              [
+                -4.866368902970205,
+                -0.3330207866715279
+              ],
+              [
+                -4.83881657510614,
+                -0.3438084276282665
+              ],
+              [
+                -4.818193504531909,
+                -0.3391191644204596
+              ],
+              [
+                -4.822822848186237,
+                -0.32258552104930327
+              ],
+              [
+                -4.849194672149769,
+                -0.30950464998704325
+              ],
+              [
+                -4.872405489199863,
+                -0.2991311330656076
+              ]
+            ]
+          },
+          "target_center_mm": [
+            0.003484773030929429,
+            0.008275325190611959
+          ],
+          "rotation_deg": -1.2000532576592104
+        },
+        "chip_001_f012": {
+          "flake": {
+            "id": "chip_001_f012",
+            "material": "hBN",
+            "layers": 17,
+            "source_chip_id": "chip_001",
+            "batch_id": "tape_segment_1_use_0",
+            "outline_mm": [
+              [
+                -0.7280418892255234,
+                0.437510683675592
+              ],
+              [
+                -0.718456038048201,
+                0.4101136523132908
+              ],
+              [
+                -0.6894470874075959,
+                0.40029621185825615
+              ],
+              [
+                -0.6717964787403724,
+                0.40821985290863894
+              ],
+              [
+                -0.6738963256558539,
+                0.42598458345675394
+              ],
+              [
+                -0.7023623819166255,
+                0.43984512250475566
+              ]
+            ]
+          },
+          "target_center_mm": [
+            0.014655405728680779,
+            0.014394552488447683
+          ],
+          "rotation_deg": -0.642693214565064
+        }
+      }
+    },
+    "images": [
+      "recorded-v3/images/microscope/microscope_000149.png"
+    ],
+    "scope": "device_simulation"
+  },
+  "process_event": {
+    "chip_id": "reactor_chip_01",
+    "timestamp": 1800002960.0865312,
+    "location": "reactor_chip_slot_1",
+    "location_uncertain": false,
+    "temperature_target_c": null,
+    "flow_target_sccm": 0.0,
+    "temperature_c": 22.0,
+    "flow_sccm": 0.0,
+    "insert_y_mm": 0.0,
+    "assembly_pose": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "rotation": 0.0
+    },
+    "access_max_celsius": 80.0,
+    "access_max_flow_sccm": 0.5,
+    "state_uncertain": false,
+    "source": "guarded_device_feedback"
+  },
+  "completion_refusal": {
+    "to": "hands",
+    "step": "s12",
+    "ok": false,
+    "status": "pending",
+    "facts": [
+      "job run_7eb25db35985 (prepare_material_metal) succeeded.",
+      "Required final sample state is not met: reactor_chip_01: status is material_metal_prepared, expected bare.",
+      "Plan step s12 is now pending.",
+      "Current plan_revision=7, plan_version=31. Use refine_plan for ordinary edits; merge progress without reusing an old update_plan version."
+    ],
+    "plan_revision": 7,
+    "plan_version": 31
+  }
+}

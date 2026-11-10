@@ -1,0 +1,429 @@
+{
+  "scope": "Minimal recorded plan/action inputs from the successful simulated v2 run; no hardware execution or raw conversation fixture.",
+  "source_recording_sha256": "020daa727de7eb160e4835550ab7cb621a035939ccafc3e407e092f98e3f3ff9",
+  "initial_plan_event_id": 159,
+  "initial_plan": [
+    {
+      "id": "s1",
+      "title": "Inspect simulated bench, inventory, and reactor readiness",
+      "owner": "eyes",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s2",
+      "title": "Establish hBN/Gr/Pd experiment requirements and review recipe",
+      "owner": "advisor",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s3",
+      "title": "Record mica support and Pd carrier provenance",
+      "owner": "orchestrator",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s4",
+      "title": "Prepare and search ordinary hBN and graphene source material",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s5",
+      "title": "Select and confirm the hBN/Gr pair",
+      "owner": "picker",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": "screen",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s6",
+      "title": "Prepare the material-metal reactor carrier",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "prepare_material_metal",
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s7",
+      "title": "Run the material-metal simulation and finish cold in storage",
+      "owner": "reactor",
+      "status": "pending",
+      "note": "",
+      "operation": "reactor_material_metal",
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": {
+        "chip_id": "reactor_chip_01",
+        "disposition": "cold_storage",
+        "temperature_target_c": null,
+        "flow_target_sccm": 0.0,
+        "rationale": "Complete the explicitly requested simulated hBN/Gr/Pd experiment, then cool and return the carrier to reactor storage."
+      }
+    }
+  ],
+  "attempts": [
+    {
+      "call_event_id": 175,
+      "refusal_event_id": 176,
+      "args": {
+        "expected_revision": 1,
+        "updates": [
+          {
+            "step_id": "s4",
+            "fields": {
+              "title": "Exfoliate hBN onto one bare chip",
+              "operation": "exfoliate_chips",
+              "materials": [
+                "hBN"
+              ],
+              "operation_args": {
+                "material": "hBN",
+                "target_temp_c": 22,
+                "dwell_s": 10,
+                "num_massages": 1,
+                "press_depth_mm": 0.2,
+                "peel_speed": 500,
+                "peel_angle_deg": 30,
+                "purpose": "secure",
+                "source_carrier_id": "carrier_hbn_01"
+              },
+              "sample_outcomes": [
+                {
+                  "sample_id": "carrier_hbn_01",
+                  "location": "left_slide_2",
+                  "status": "available",
+                  "in_storage": true
+                }
+              ],
+              "note": "Use the advisor's complete simulated trial recipe; target chip is allocated by the registered flow."
+            }
+          },
+          {
+            "step_id": "s5",
+            "fields": {
+              "title": "Screen the hBN/Gr candidate set",
+              "materials": [
+                "hBN",
+                "Gr"
+              ],
+              "experiment_stage": "screen"
+            }
+          },
+          {
+            "step_id": "s6",
+            "fields": {
+              "title": "Prepare and assemble the confirmed hBN/Gr pair on reactor_chip_01",
+              "materials": [
+                "hBN",
+                "Gr"
+              ],
+              "operation_args": {
+                "chip_id": "reactor_chip_01",
+                "top_material": "hBN",
+                "reactive_material": "Gr",
+                "metal": "Pd",
+                "substrate": "silicon",
+                "stamp_id": "stamp_01",
+                "retain_images": true,
+                "retain_source_provenance": true
+              },
+              "sample_outcomes": [
+                {
+                  "sample_id": "reactor_chip_01",
+                  "location": "reactor_chip_slot_1",
+                  "status": "material_metal_prepared",
+                  "in_storage": true
+                }
+              ],
+              "note": "Hands preparation/assembly after Picker confirmation; preserve top-first hBN/Gr order."
+            }
+          }
+        ],
+        "additions": [
+          {
+            "title": "Exfoliate Gr onto one bare chip",
+            "owner": "hands",
+            "operation": "exfoliate_chips",
+            "materials": [
+              "Gr"
+            ],
+            "operation_args": {
+              "material": "Gr",
+              "target_temp_c": 22,
+              "dwell_s": 10,
+              "num_massages": 1,
+              "press_depth_mm": 0.2,
+              "peel_speed": 500,
+              "peel_angle_deg": 30,
+              "purpose": "secure",
+              "source_carrier_id": "carrier_gr_01"
+            },
+            "sample_outcomes": [
+              {
+                "sample_id": "carrier_gr_01",
+                "location": "left_slide_1",
+                "status": "available",
+                "in_storage": true
+              }
+            ]
+          },
+          {
+            "title": "Search the hBN exfoliation chip and save microscope images",
+            "owner": "hands",
+            "operation": "search_chip",
+            "materials": [
+              "hBN"
+            ],
+            "note": "Bind the actual receiving chip after the exfoliation job returns; require searched and in_storage."
+          },
+          {
+            "title": "Search the Gr exfoliation chip and save microscope images",
+            "owner": "hands",
+            "operation": "search_chip",
+            "materials": [
+              "Gr"
+            ],
+            "note": "Bind the actual receiving chip after the exfoliation job returns; require searched and in_storage."
+          },
+          {
+            "title": "Assess screened hBN/Gr candidates locally",
+            "owner": "hands",
+            "operation": "assess_reactor_inputs",
+            "materials": [
+              "hBN",
+              "Gr"
+            ],
+            "experiment_stage": "screen"
+          },
+          {
+            "title": "Confirm the exact top-first hBN/Gr pair",
+            "owner": "picker",
+            "materials": [
+              "hBN",
+              "Gr"
+            ],
+            "experiment_stage": "confirm"
+          }
+        ],
+        "note": "Repair the plan with complete advisor recipe fields and the required Picker screen -> Hands local assessment -> Picker confirm -> Hands assembly sequence."
+      },
+      "requirement_errors": [
+        "Use Picker screen -> Hands local check -> Picker confirm -> Hands assembly -> Reactor reaction."
+      ]
+    },
+    {
+      "call_event_id": 190,
+      "refusal_event_id": 191,
+      "args": {
+        "expected_revision": 1,
+        "updates": [
+          {
+            "step_id": "s4",
+            "fields": {
+              "title": "Exfoliate hBN onto one bare chip",
+              "operation": "exfoliate_chips",
+              "materials": [
+                "hBN"
+              ],
+              "operation_args": {
+                "material": "hBN",
+                "target_temp_c": 22,
+                "dwell_s": 10,
+                "num_massages": 1,
+                "press_depth_mm": 0.2,
+                "peel_speed": 500,
+                "peel_angle_deg": 30,
+                "purpose": "secure",
+                "source_carrier_id": "carrier_hbn_01"
+              },
+              "sample_outcomes": [
+                {
+                  "sample_id": "carrier_hbn_01",
+                  "location": "left_slide_2",
+                  "status": "available",
+                  "in_storage": true
+                }
+              ]
+            }
+          },
+          {
+            "step_id": "s5",
+            "fields": {
+              "title": "Screen the hBN/Gr candidate set",
+              "materials": [
+                "hBN",
+                "Gr"
+              ],
+              "experiment_stage": "screen"
+            }
+          },
+          {
+            "step_id": "s6",
+            "fields": {
+              "title": "Prepare and assemble the confirmed hBN/Gr pair on reactor_chip_01",
+              "operation": "prepare_material_metal",
+              "materials": [
+                "hBN",
+                "Gr"
+              ],
+              "operation_args": {
+                "chip_id": "reactor_chip_01",
+                "top_material": "hBN",
+                "reactive_material": "Gr",
+                "metal": "Pd",
+                "substrate": "silicon",
+                "stamp_id": "stamp_01",
+                "retain_images": true,
+                "retain_source_provenance": true
+              },
+              "sample_outcomes": [
+                {
+                  "sample_id": "reactor_chip_01",
+                  "location": "reactor_chip_slot_1",
+                  "status": "material_metal_prepared",
+                  "in_storage": true
+                }
+              ]
+            }
+          }
+        ],
+        "additions": [
+          {
+            "title": "Exfoliate Gr onto one bare chip",
+            "owner": "hands",
+            "operation": "exfoliate_chips",
+            "materials": [
+              "Gr"
+            ],
+            "operation_args": {
+              "material": "Gr",
+              "target_temp_c": 22,
+              "dwell_s": 10,
+              "num_massages": 1,
+              "press_depth_mm": 0.2,
+              "peel_speed": 500,
+              "peel_angle_deg": 30,
+              "purpose": "secure",
+              "source_carrier_id": "carrier_gr_01"
+            },
+            "sample_outcomes": [
+              {
+                "sample_id": "carrier_gr_01",
+                "location": "left_slide_1",
+                "status": "available",
+                "in_storage": true
+              }
+            ]
+          },
+          {
+            "title": "Search the hBN exfoliation chip and save microscope images",
+            "owner": "hands",
+            "operation": "search_chip",
+            "materials": [
+              "hBN"
+            ]
+          },
+          {
+            "title": "Search the Gr exfoliation chip and save microscope images",
+            "owner": "hands",
+            "operation": "search_chip",
+            "materials": [
+              "Gr"
+            ]
+          },
+          {
+            "title": "Assess screened hBN/Gr candidates locally",
+            "owner": "hands",
+            "operation": "assess_reactor_inputs",
+            "materials": [
+              "hBN",
+              "Gr"
+            ],
+            "experiment_stage": "screen",
+            "sample_outcomes": [
+              {
+                "sample_id": "carrier_hbn_01",
+                "location": "left_slide_2",
+                "status": "available",
+                "in_storage": true
+              },
+              {
+                "sample_id": "carrier_gr_01",
+                "location": "left_slide_1",
+                "status": "available",
+                "in_storage": true
+              }
+            ]
+          },
+          {
+            "title": "Confirm the exact top-first hBN/Gr pair",
+            "owner": "picker",
+            "materials": [
+              "hBN",
+              "Gr"
+            ],
+            "experiment_stage": "confirm",
+            "sample_outcomes": [
+              {
+                "sample_id": "carrier_hbn_01",
+                "location": "left_slide_2",
+                "status": "available",
+                "in_storage": true
+              },
+              {
+                "sample_id": "carrier_gr_01",
+                "location": "left_slide_1",
+                "status": "available",
+                "in_storage": true
+              }
+            ]
+          }
+        ],
+        "note": "Add all established experiment operations while preserving top-first hBN/Gr assembly and reactor reaction."
+      },
+      "requirement_errors": [
+        "Use Picker screen -> Hands local check -> Picker confirm -> Hands assembly -> Reactor reaction."
+      ]
+    }
+  ]
+}

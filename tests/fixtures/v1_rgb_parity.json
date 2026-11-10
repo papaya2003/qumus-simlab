@@ -1,0 +1,175 @@
+{
+  "scope": "Declared RGB numerical parity only; not microscope accuracy or calibration",
+  "donor_sha256": {
+    "segmenter.py": "44bd5966134169b4feb9d76f1995687696b2f07cd48a359bafec3e4e9429f36c",
+    "material.py": "08fb82921e4cd50e59b2d9b0d46da8783aed251e194c9f123e29e627869c989c",
+    "utils.py": "10c5e55fdded8476de30f148ac891615203d1986799b205a6eca0b7950f0b532"
+  },
+  "cases": [
+    {
+      "name": "Gr20",
+      "material": "Gr",
+      "objective": 20,
+      "background_lab": [
+        49.62793933,
+        12.17574073,
+        5.43972594
+      ],
+      "foreground_lab": [
+        50.0,
+        0.0,
+        -8.0
+      ],
+      "size_px": [
+        480,
+        320
+      ],
+      "rectangle_px": [
+        180,
+        110,
+        300,
+        210
+      ],
+      "background_support_pixels": 135508,
+      "rgb_sha256": "f7623557c1b71dd59dcf3ac298fde3a20b626275025524bf3b5bd4052b0772ea",
+      "raw_label_sha256": "e7a59ed4bb45acfd0570c0aab4326a9e4d4c3e17441fc0bae6e91b7ab5dac44f",
+      "candidates": [
+        {
+          "label_id": 2,
+          "thickness_label": "manylayer",
+          "area_px": 10724,
+          "centroid_px": [
+            240.5,
+            160.5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "hBN20",
+      "material": "hBN",
+      "objective": 20,
+      "background_lab": [
+        49,
+        27.5,
+        8.5
+      ],
+      "foreground_lab": [
+        50.0,
+        20.0,
+        -2.0
+      ],
+      "size_px": [
+        480,
+        320
+      ],
+      "rectangle_px": [
+        180,
+        110,
+        300,
+        210
+      ],
+      "background_support_pixels": 130336,
+      "rgb_sha256": "8a8a6541d05cf0aeb5842e1768687b1393db591811c828a91265a58085db4ebf",
+      "raw_label_sha256": "0636174bb4c04ddf6a6aa0e3188e0026d5d18a16bef42cd6e5fedddaa7c9f756",
+      "candidates": [
+        {
+          "label_id": 2,
+          "thickness_label": "0-10",
+          "area_px": 11777,
+          "centroid_px": [
+            240.0,
+            160.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gr100",
+      "material": "Gr",
+      "objective": 100,
+      "background_lab": [
+        49.62793933,
+        12.17574073,
+        5.43972594
+      ],
+      "foreground_lab": [
+        75.0,
+        0.0,
+        35.0
+      ],
+      "size_px": [
+        480,
+        320
+      ],
+      "rectangle_px": [
+        180,
+        110,
+        300,
+        210
+      ],
+      "background_support_pixels": 109004,
+      "rgb_sha256": "ca2859dbcc7fb3c6ec6d79d119cb8e295a7a2998ccba6c886b6002b232e2fb28",
+      "raw_label_sha256": "4cc1e3fa89cbf03c120c3ba7cbd1d1038167113c0a93da23148977142c7b91f5",
+      "candidates": [
+        {
+          "label_id": 2,
+          "thickness_label": "bulk",
+          "area_px": 10304,
+          "centroid_px": [
+            240.5,
+            160.5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "hBN100",
+      "material": "hBN",
+      "objective": 100,
+      "background_lab": [
+        49,
+        27.5,
+        8.5
+      ],
+      "foreground_lab": [
+        56.0,
+        -16.0,
+        -15.0
+      ],
+      "size_px": [
+        480,
+        320
+      ],
+      "rectangle_px": [
+        180,
+        110,
+        300,
+        210
+      ],
+      "background_support_pixels": 0,
+      "rgb_sha256": "03762086ceca6d15dbe20463423925c33a7612d8e90f9eeb2f4d93cfa07c6819",
+      "raw_label_sha256": "7d78a8dd4d7dd843cde2460a5b5c0c6b09f6ab4e6e10e96b4cb76c757f7fb26e",
+      "candidates": [
+        {
+          "label_id": 1,
+          "thickness_label": "0-10",
+          "area_px": 133365,
+          "centroid_px": [
+            241.5013909196566,
+            161.50101600869795
+          ]
+        },
+        {
+          "label_id": 2,
+          "thickness_label": "0-10",
+          "area_px": 10218,
+          "centroid_px": [
+            241.4876688197299,
+            161.4876688197299
+          ]
+        }
+      ]
+    }
+  ]
+}

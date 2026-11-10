@@ -1,0 +1,138 @@
+# Scripted demo: "Make a graphene device". All six agents: the advisor plans an
+# hBN/graphene/hBN stack, the picker finds no flakes at first, hands
+# exfoliates and searches hBN and graphene, the picker selects, the designer
+# lays out the device, hands stacks it.
+name: graphene_device
+description: hBN-encapsulated graphene Hall bar from plan to layout, with exfoliation and
+  search when the inventory has too few flakes.
+turns:
+  - actions:
+      - say: {agent: orchestrator, text: "Sure. I will ask the advisor for a device plan, find flakes for it (exfoliating more if needed), have the layout designed and checked, and then stack it."}
+      - tool:
+          agent: orchestrator
+          name: update_plan
+          args:
+            note: initial plan
+            plan:
+              - {id: s1, title: Device plan, owner: advisor}
+              - {id: s2, title: Check chips and carriers, owner: eyes}
+              - {id: s3, title: Select flakes (exfoliate and search if too few), owner: picker}
+              - {id: s4, title: Lay out the device, owner: designer}
+              - {id: s5, title: Stack the device, owner: hands}
+      - delegate: {to: advisor, task: "Plan an hBN-encapsulated graphene Hall bar on a chip with pre-patterned bottom electrodes. Submit it with submit_device_plan."}
+      - tool: {agent: advisor, name: get_lab_setup, args: {}}
+      - tool: {agent: advisor, name: get_target_geometry, args: {chip_id: chip_e01}}
+      - tool: {agent: advisor, name: get_experience, args: {materials: [Gr, hBN]},
+               save_as: experience}
+      - tool:
+          agent: advisor
+          name: submit_device_plan
+          args:
+            device_name: hBN/graphene/hBN Hall bar
+            target_chip_id: chip_e01
+            bridge_requirement: {contact_overlap_um: 1, channel_width_um: 2, placement_margin_um: 0.5, rationale: "Synthetic centre-pair fixture; not a physical design certification"}
+            layer_stack:
+              - {material: hBN, role: top_hbn, thickness: 10-40 nm, flake: true,
+                 thickness_labels: ["10-20", "20-30", "30-40"], min_area_um2: 100}
+              - {material: Gr, role: channel, thickness: 1-3 layers, flake: true,
+                 thickness_labels: [monolayer, bilayer, trilayer], min_area_um2: 50}
+              - {material: hBN, role: bottom_hbn, thickness: 10-40 nm, flake: true,
+                 thickness_labels: ["10-20", "20-30", "30-40"], min_area_um2: 100}
+            contact_scheme: pre-patterned Au bottom electrodes on the target chip (external)
+            gate_scheme: global Si back gate through the bottom hBN
+            channel: Hall bar 10x20 um preferred, 5x10 um min
+            workflow_plan: [exfoliate and search hBN and graphene, select flakes, lay out,
+                            stack onto the electrode chip]
+            evidence: "Distilled experience: {{experience._summary}}; standard encapsulation from the literature."
+          save_as: plan
+      - done: {agent: advisor, summary: "Device plan submitted: {{plan._summary}}. Three flakes: top hBN, graphene channel, bottom hBN."}
+      - delegate: {to: eyes, task: "List the chips and the crystal carriers on the bench."}
+      - tool: {agent: eyes, name: inspect_bench, args: {}, save_as: look}
+      - tool: {agent: eyes, name: list_samples, args: {}, save_as: setup}
+      - done: {agent: eyes, summary: "Bench: {{look._summary}}. {{setup._summary}}; hBN and graphene carriers are loaded."}
+      - delegate: {to: picker, task: "Select flakes for the device plan."}
+      - pick_flakes: {save_as: pick, fixture_footprint_um: [32, 4]}
+      - branch:
+          result_of: pick
+          cases:
+            ok: [{done: {agent: picker, summary: "Selected {{pick._summary}}."}}]
+          default:
+            - done: {agent: picker, summary: "Blocked: {{pick._summary}}. We need to exfoliate and search.", step_status: running}
+            - say: {agent: orchestrator, text: "There are not enough flakes yet. Hands will exfoliate and search one hBN chip and one graphene chip."}
+            - delegate: {to: hands, step: s3, task: "Exfoliate hBN onto one bare chip and search it; then the same for graphene (Gr)."}
+            - tool: {agent: hands, name: exfoliate_chips, args: {material: hBN, num_chips: 1}, save_as: ex1}
+            - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex1.job_id}}", timeout_s: 600}}
+            - tool: {agent: hands, name: search_chip, args: {material: hBN}, save_as: se1}
+            - tool: {agent: hands, name: wait_job, args: {job_id: "{{se1.job_id}}", timeout_s: 600}}
+            - tool: {agent: hands, name: exfoliate_chips, args: {material: Gr, num_chips: 1}, save_as: ex2}
+            - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex2.job_id}}", timeout_s: 600}}
+            - tool: {agent: hands, name: search_chip, args: {material: Gr}, save_as: se2}
+            - tool: {agent: hands, name: wait_job, args: {job_id: "{{se2.job_id}}", timeout_s: 600}}
+            - done: {agent: hands, summary: "Exfoliated and searched one hBN chip and one graphene chip.", step_status: running}
+            - delegate: {to: picker, task: "Select flakes for the device plan again; new candidates were catalogued."}
+            - pick_flakes: {save_as: pick, fixture_footprint_um: [32, 4]}
+            - branch:
+                result_of: pick
+                cases:
+                  ok: []
+                default:
+                  - done: {agent: picker, summary: "The observed flakes do not form a compatible covered stack; another hBN source is needed.", step_status: running}
+                  - delegate: {to: hands, step: s3, task: "Exfoliate and search one additional hBN chip for a compatible top layer."}
+                  - tool: {agent: hands, name: exfoliate_chips, args: {material: hBN, num_chips: 1}, save_as: ex3}
+                  - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex3.job_id}}", timeout_s: 600}}
+                  - tool: {agent: hands, name: search_chip, args: {material: hBN}, save_as: se3}
+                  - tool: {agent: hands, name: wait_job, args: {job_id: "{{se3.job_id}}", timeout_s: 600}}
+                  - done: {agent: hands, summary: "Prepared and photographed an additional hBN source.", step_status: running}
+                  - delegate: {to: picker, task: "Select a compatible stack from all observed sources."}
+                  - pick_flakes: {save_as: pick, fixture_footprint_um: [32, 4]}
+                  - branch:
+                      result_of: pick
+                      cases:
+                        ok: []
+                      default:
+                        - done: {agent: picker, summary: "The additional hBN still cannot cover the available channels. Search an additional Gr source.", step_status: running}
+                        - delegate: {to: hands, step: s3, task: "Exfoliate and search one additional Gr chip for a compatible smaller channel."}
+                        - tool: {agent: hands, name: exfoliate_chips, args: {material: Gr, num_chips: 1}, save_as: ex4}
+                        - tool: {agent: hands, name: wait_job, args: {job_id: "{{ex4.job_id}}", timeout_s: 600}}
+                        - tool: {agent: hands, name: search_chip, args: {material: Gr}, save_as: se4}
+                        - tool: {agent: hands, name: wait_job, args: {job_id: "{{se4.job_id}}", timeout_s: 600}}
+                        - done: {agent: hands, summary: "Prepared and photographed an additional Gr source.", step_status: running}
+                        - delegate: {to: picker, task: "Select from all observed sources after the bounded preparation rounds."}
+                        - pick_flakes: {save_as: pick, fixture_footprint_um: [32, 4]}
+            - done: {agent: picker, summary: "{{pick._summary}}"}
+      - branch:
+          result_of: pick
+          cases:
+            ok:
+              - delegate: {to: designer, task: "Lay out the Hall bar on the selected flakes and submit it."}
+              - lay_out: {save_as: design}
+              - done: {agent: designer, summary: "{{design._summary}}"}
+              - delegate: {to: hands, task: "Stack the selected flakes onto the electrode chip."}
+              - tool: {agent: orchestrator, name: get_project_context, args: {}, save_as: proj}
+              - tool: {agent: hands, name: list_samples, args: {kind: chip, status: patterned}, save_as: chips}
+              - tool: {agent: hands, name: stack_device,
+                       args: {flake_ids: "{{proj.state.selected_flakes}}",
+                              target_chip_id: "{{chips.samples.0.id}}"}, save_as: stack}
+              - branch:
+                  result_of: stack
+                  cases:
+                    pending:
+                      - tool: {agent: hands, name: wait_job,
+                               args: {job_id: "{{stack.job_id}}", timeout_s: 600}, save_as: stacked}
+                      - branch:
+                          result_of: stacked
+                          cases:
+                            ok: &stacked_ok
+                              - done: {agent: hands, summary: "Stack landed on {{chips.samples.0.id}}: {{stacked._summary}}."}
+                              - say: {agent: orchestrator, text: "The device is stacked on chip {{chips.samples.0.id}}: top hBN, graphene, bottom hBN, with the layout checked by code. Contacts and lithography are the next, external steps."}
+                            corrected: *stacked_ok
+                          default:
+                            - tool: {agent: hands, name: request_human_help,
+                                     args: {reason: "stacking needs attention", job_id: "{{stack.job_id}}"}}
+                            - done: {agent: hands, summary: "Stacking needs attention ({{stacked._summary}}); asked a human.", step_status: failed}
+                            - say: {agent: orchestrator, text: "Stacking stopped and needs a person: {{stacked._summary}}. A human has been notified."}
+                  default:
+                    - done: {agent: hands, summary: "Could not start stacking: {{stack._summary}}.", step_status: failed}
+                    - say: {agent: orchestrator, text: "The flakes are selected and the layout passed its code check, but stacking could not start: {{stack._summary}}."}
+          default:
+            - say: {agent: orchestrator, text: "Even after one more exfoliation round there are not enough suitable flakes ({{pick._summary}}). I can run another round; tell me if you want that."}

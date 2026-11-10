@@ -1,0 +1,54 @@
+# Scripted demo used without an API key (spec 15.2) and by tests.
+# Turn 1 answers the first user message; turn 2 the second, and so on.
+name: place_chip_demo
+description: Orchestrator plans, eyes checks inventory, hands places a chip with camera
+  verification; the testbench injects a bad placement that the step corrects.
+turns:
+  - actions:
+      - say: {agent: orchestrator, text: "OK. I will check the inventory first, then put one chip on the transfer stage and verify it with the camera."}
+      - tool:
+          agent: orchestrator
+          name: update_plan
+          args:
+            note: initial plan
+            plan:
+              - {id: s1, title: Check chip inventory, owner: eyes}
+              - {id: s2, title: Place chip_001 on the transfer stage, owner: hands}
+              - {id: s3, title: Report, owner: orchestrator}
+      - delegate: {to: eyes, task: "List chips and their locations."}
+      - tool: {agent: eyes, name: inspect_bench, args: {}}
+      - tool: {agent: eyes, name: list_samples, args: {kind: chip}}
+      - done: {agent: eyes, summary: "Bench checked by camera; 3 chips in slots 1-3."}
+      - delegate: {to: hands, task: "Place chip_001 on the transfer stage."}
+      - tool: {agent: hands, name: place_chip_on_transfer_stage, args: {chip_id: chip_001},
+               save_as: job}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{job.job_id}}", timeout_s: 60},
+               save_as: result}
+      - branch:
+          result_of: result
+          cases:
+            ok:
+              - done: {agent: hands, summary: "chip_001 placed; camera check passed first time."}
+              - say: {agent: orchestrator, text: "The chip is on the transfer stage; the camera check passed the first time."}
+            corrected:
+              - done: {agent: hands, summary: "chip_001 placed; it was off, re-placed and verified."}
+              - say: {agent: orchestrator, text: "The chip is on the transfer stage. The first placement was askew; the system re-placed it automatically and the check passed."}
+          default:
+            - tool: {agent: hands, name: request_human_help,
+                     args: {reason: "chip_001 could not be placed within tolerance",
+                            job_id: "{{job.job_id}}"}}
+            - done: {agent: hands, summary: "placement still off after corrections; asked for help.", step_status: failed}
+            - say: {agent: orchestrator, text: "Placing the chip did not succeed (corrections used up); a human has been notified."}
+  - actions:
+      - say: {agent: orchestrator, text: "Got it, I am adjusting the plan to your new instruction."}
+      - tool: {agent: orchestrator, name: get_project_context, args: {}, save_as: context}
+      - tool:
+          agent: orchestrator
+          name: update_plan
+          args:
+            note: user instruction
+            expected_version: "{{context.plan_version}}"
+            plan:
+              - {id: s1, title: Check chip inventory, owner: eyes, status: done}
+              - {id: s2, title: Place chip_001 on the transfer stage, owner: hands, status: done}
+              - {id: s3, title: Report, owner: orchestrator, status: done}

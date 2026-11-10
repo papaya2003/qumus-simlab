@@ -1,0 +1,199 @@
+# Verification tolerances and correction budgets per step (spec 4.2, 4.4).
+# PLACEHOLDER values until calibrated in the lab (spec 4.2 "Tolerances: TBD").
+
+# Arm pick-and-place steps, measured by a desktop camera.
+place_chip_on_transfer_stage:
+  tolerance_mm: 0.5
+  tolerance_deg: 2.0
+  correctable_within_mm: 8.0     # beyond this the result is "unclear" -> agent decides
+  max_corrections: 4             # each re-place is a fresh draw of the arm placement error;
+                                 # the camera's heavy-tailed error can also read a good
+                                 # placement as off, so one more try than elsewhere
+place_chip_in_reactor:
+  tolerance_mm: 0.6
+  tolerance_deg: 3.0
+  edge_margin_mm: 0.05           # synthetic footprint clearance; calibrate with camera uncertainty
+  correctable_within_mm: 6.0
+  max_corrections: 3
+
+place_chip_on_exfoliation_stage:
+  tolerance_mm: 1.0
+  tolerance_deg: 3.0
+  correctable_within_mm: 8.0
+  max_corrections: 3             # lost steps take two tries to recognise (same offset
+                                 # twice) and one more after homing
+store_chip:                      # into a storage slot (also the hand-over between arms)
+  tolerance_mm: 1.5
+  tolerance_deg: 5.0
+  correctable_within_mm: 7.0
+  max_corrections: 3             # as above
+place_carrier:
+  tolerance_mm: 1.5
+  tolerance_deg: 5.0
+  correctable_within_mm: 10.0
+  max_corrections: 3             # like a chip: each re-place is a fresh draw (a big
+                                 # error can repeat; seed 1 of the demo hit two in a row)
+
+clear_exfoliation_stage:
+  max_corrections: 2
+
+tape:
+  advance_mm: 120                # v1 AtomTapeRelease(120)
+  max_corrections: 1
+
+heating:
+  band_c: 2.0                    # "reached" = within this of the setpoint
+  timeout_s: 900                 # v1 had none
+  stuck_window_s: 120            # reading unchanged this long while far from setpoint = sensor stuck
+  stuck_delta_c: 0.3
+  peel_below_c: 60.0             # v1 waits until < 60 C before peeling
+  cool_timeout_s: 1800
+  poll_s: 5
+
+transfer_stage:
+  tolerance_mm: 0.01             # encoder readback vs commanded
+
+chip_corner:
+  tolerance_mm: 1.5              # measured corner vs nominal (placement error budget)
+  search_step_mm: 0.6            # spiral step when the corner is not in view
+  max_corrections: 4
+
+focus:
+  min_sharpness: {10: 6.5, 20: 5.5, 100: 5.0}   # v1 min_blur_* defaults
+  coarse_half_range: 0.6         # sweep +-this around the current focus (10x; scales with dof)
+  coarse_points: 9
+  fine_points: 9
+  minimum_peak_gain: 0.02       # synthetic raster-curve discrimination, relative
+
+# Synthetic controller bounds, not measured laboratory rates or calibration.
+# These constrain local Steps; UI refresh and Agent calls have separate cadence.
+design_pose_window:
+  # Pose window the device design must survive per flake. v1 never turns a
+  # chip (#204), so each layer lands with the difference of two chip
+  # placement angles (SIM placement sigma 1 deg each, inferred): the design
+  # keeps its contacts over +-3 deg instead of the 1 deg vision tolerance.
+  rotation_deg: 3.0
+vision_control:
+  # Shared independent registration/autofocus consumers in primitives.py.
+  residual_tolerance_mm: 0.02
+  residual_rotation_deg: 1.0     # owner-selected SIM acceptance; not measured angular precision
+  max_translation_px: 40
+  min_match_quality: 0.72
+  min_match_ambiguity: 0.02
+
+transfer_sequence:
+  id: v1-normal-sim-v2
+  source: synthetic
+  simulation_only: true
+  historical_source: preserved-v1-normal-sequence
+  holder_xy_mapping: synthetic-parallel-world-axes-v1
+  source_height_mapping: synthetic-native20-source-focus-positive-up-process-reference-v1
+  # SIM adaptations, not apparatus calibration; historical +25mm is not copied.
+  focus_offset_mm: 0.3
+  nominal_contact_z_mm: 5.8 # nominal fixed-release preset admission; not measured contact
+  release_z_mm: 5.7 # PROVISIONAL nominal preset; physical variation may refuse/fail
+  release_setpoint_headroom_c: 0.5 # fixed measured entry/release headroom; no retry heat escalation
+  first_touch_intent_mm: 0.01
+  # Anti-crush floor of the 10 um touch search (#204; v1 has none): the
+  # holder never goes below the v1 drop press height Z 4.9 while looking
+  # for first contact; there a person must check the stamp.
+  first_contact_min_z_mm: 4.9
+  # v1 molecule_initialize_stamp preset: the holder goes to Z_TARGET 5.4 at
+  # Z_MAX_VEL 0.1 mm/s before the touching search starts (#204)
+  initialize_z_mm: 5.4
+  initialize_speed_mm_s: 0.1
+  pickup_intent_mm: 0.1
+  descent_speed_mm_s: 0.005 # v1 touching approach Z max_vel (molecule_adjust_touching_point.py)
+  # v1 Z profile (#179): 0.05 mm/s away from contact, the touching speed above
+  # within DELTA_Z 0.2 mm of the expected contact, and the v1 pickup Z max_vel
+  # 0.002 mm/s once past it, so the contact front grows at a realistic rate.
+  approach_speed_mm_s: 0.05 # v1 normal Z max_vel
+  approach_standoff_mm: 0.2 # v1 DELTA_Z
+  press_speed_mm_s: 0.002 # v1 pickup Z max_vel (molecule_pick_up.py)
+  drop_speed_mm_s: 0.02 # v1 molecule_drop_down lowering max_vel (#180)
+  # v1 molecule_drop_down (#204): heat to DROP_DOWN_TEMP_C with an autofocus
+  # every TEMP_CHECK_PERIOD_S, Z to DROP_DOWN_Z at the drop speed, wait above
+  # melt_temp_c, lift MELT_LIFT_DELTA_Z at 0.1 mm/s. The 2 um peel is gone.
+  drop_entry_c: 155.0
+  drop_melt_c: 170.0
+  drop_check_period_s: 10.0
+  drop_z_mm: 4.9
+  drop_lift_mm: 5.0
+  drop_lift_speed_mm_s: 0.1
+  pickup_lift_speed_mm_s: 0.01
+  first_contact_offset_mm: 0.219 # 300 historical px * .730um/px, image -v
+  pickup_target_offset_image_mm: [-0.0146, 0.0146] # image right/down, NOT world XY
+  pickup_margin_mm: 0.1752 # strict >240 historical px, not full-flake containment
+  minimum_area_mm2: 0.0026645 # >5000 historical px * (.000730 mm/px)^2
+  pickup_blur_support_mm: 0.00657 # historical nine pixels; six-sigma native Gaussian
+  post_phase_focus_half_range_mm: 0.08
+  max_unobserved_z_mm: 0.025
+  max_unobserved_s: 2.0
+  capture_reserve_s: 0.05
+  max_observations: 600
+  max_total_s: 900
+  max_travel_mm: 8.0 # includes release lift; physical floors still apply
+
+scan:
+  overlap: 0.1                   # tile overlap fraction
+  # chip_plane (owner 2026-11-04, #203): autofocus once per chip at three
+  # corner fields, fit a plane, take every field on that plane; no per-field
+  # refocus. Assumes a flat chip -- revisit with the real camera (v1 used
+  # the camera's continuous hardware AF per field). per_tile = old policy.
+  focus_policy: chip_plane
+  refocus_every_row: true        # per_tile policy only
+  max_blurred_tiles: 0           # tiles under min sharpness after refocus -> rescan
+  max_corrections: 1
+  # two detections closer than this (stage coordinates) are one flake seen in
+  # two overlapping tiles; each long stage move lands within ~2 um per axis,
+  # so the same flake can come out ~10 um apart (was 0.01: counted twice)
+  merge_mm: 0.03
+
+revisit:
+  refind_radius_um: 30           # a candidate is "found again" within this distance at 20x
+  max_corrections: 0
+
+# ----- stacking (stack_device) ---------------------------------------------
+load_stamp:                      # arm: stamp from its rack slot onto the manipulator head
+  tolerance_mm: 1.0
+  tolerance_deg: 45.0            # a round stamp: rotation does not matter
+  correctable_within_mm: 6.0
+  max_corrections: 2
+return_stamp:
+  tolerance_mm: 1.5
+  tolerance_deg: 45.0
+  correctable_within_mm: 6.0
+  max_corrections: 2
+manipulator:
+  tolerance_mm: 0.005            # axis readback vs commanded
+  position_tolerance_mm: 1.0     # "at the load pose" (the hand-off) when probing after a restart
+refind_flake:
+  objective: 20
+  search_radius_um: 60           # the flake must be within this of where the ledger puts it
+  centre_tolerance_um: 1         # owner-selected SIM acceptance tolerance; not measured repeatability
+  max_corrections: 3
+device_design_endpoint:
+  # Final placement acceptance (owner, 2026-11-03: ~1.5 um placement is fully
+  # acceptable). The design margin stays at refind_flake.centre_tolerance_um.
+  translation_tolerance_um: 2
+electrode_refind:
+  # v1 accurate refind (#204): the user's 20x photo of the device site is
+  # matched in the new 20x image; a match farther than this from where the
+  # corners put the site is not used.
+  max_shift_um: 15
+pickup:
+  max_press_mm: 0.2 # conservative candidate-relative budget, not calibrated force
+  local_clearance_mm: 0.020 # provisional local flake-edge gap; not the stamp footprint
+  # Jialei 2026-11-03: do not pick a source flake at the chip edge. The
+  # contact front that covers the flake plus its margin must not be clipped
+  # by the chip edge first (a518 seed 2: flake 0.35 mm from the edge).
+  source_chip_edge_clearance_mm: 1.0
+  # Jialei 2026-11-03: a pickup that leaves the whole source flake on its
+  # chip may be pressed again when the stamp load is unaffected (for a
+  # second layer a fresh look must show the carried hBN still covering the
+  # Gr). Design stacks only; each press is its own logged phase.
+  max_represses: 2
+
+drop:
+  stack_radius_um: 25            # every layer centre within this of the target (flakes are 30-80 um wide)
+  safe_handling_c: 60            # cool below this before the arm touches the chip

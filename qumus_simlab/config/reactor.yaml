@@ -1,0 +1,67 @@
+# Entirely synthetic development profile. Not a physical apparatus configuration.
+provenance: synthetic-development-profile
+mechanics_version: 2
+experiment_kind: two_flake_reaction
+synthetic_prepared_pairs: true
+acquisition:
+  placement_corrections: 8
+  search_pitch_mm: 0.10
+  search_rings: 5
+preparation:
+  # Conservative optical neighbourhood for the full configured contact-depth
+  # envelope (synthetic 1.5 mm dome, 0.2 mm depth), plus alignment margin.
+  clear_radius_mm: 0.85
+reaction:
+  activation_temperature_c: 700
+  activation_flow_sccm: 10
+  profile:
+    name: uncalibrated two-flake exposure fixture
+    product_label: Unspecified synthetic product
+    exposure_to_completion_s: 60
+bench_layout:
+  first_storage_center_x_mm: 130
+  arm_storage_pitch_mm: 190
+geometry:
+  table: {x: [0, 1440], y: [0, 630]}
+  chamber_region: {x: [1140, 1260], y: [330, 530]}
+  storage_region: {x: [1295, 1380], y: [75, 175]}
+  storage_origin: {x: 1320, y: 140}
+  storage_pitch_mm: [35, 40]
+  load: {x: 1200, y: 270}
+  microscope_center: {x: 1200, y: 430}
+  process_y_mm: 160
+  chamber_entry_y_mm: 60
+  # Owner-confirmed proportions; absolute dimensions remain simulation fixtures.
+  chip_size_mm: [2.5, 10]
+  # Synthetic deposited patch, chip-centred mm; observed through ordinary optics.
+  # This is a fixture shape, never an inferred physical metal footprint.
+  metal_patch_outline_mm: [[-0.24, -0.16], [0.30, -0.16], [0.26, 0.18], [-0.18, 0.20]]
+  carrier_slot_size_mm: [3, 11]
+  rod_length_mm: 190
+  rod_width_mm: 3
+  arm_base: {x: 1080, y: 126}
+  fov_mm_10x: [2.6, 1.72]
+motion:
+  insertion_speed_mm_s: 30
+  assembly_speed_mm_s: 1
+controller_mapping:
+  bottom: assembly_x
+  top: assembly_y
+  insert: insertion_y
+  # Firmware direction labels are not calibrated signs in the laboratory frame.
+  calibration: required
+thermal:
+  ambient_c: 22
+  heating_tau_s: 30
+  cooling_tau_s: 45
+  flow_tau_s: 2
+growth:
+  name: synthetic_mos2_demo
+  material: MoS2 (synthetic example)
+  optimum_temperature_c: 820
+  temperature_width_c: 65
+  optimum_flow_sccm: 200
+  log_flow_width: 0.55
+  optimum_time_s: 600
+  activation_temperature_c: 350
+  grid_size: 10

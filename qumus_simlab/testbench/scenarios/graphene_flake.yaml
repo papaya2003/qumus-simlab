@@ -1,0 +1,50 @@
+# Scripted demo: "Give me a graphene flake". Orchestrator, advisor, eyes and
+# hands: recipe from the run records, carriers from the lab setup, then
+# exfoliation and a microscope search on the testbench.
+name: graphene_flake
+description: Advisor picks exfoliation parameters from past runs, eyes checks the lab setup,
+  hands exfoliates graphene onto a bare chip and searches it under the microscope.
+turns:
+  - actions:
+      - say: {agent: orchestrator, text: "Sure. I will get exfoliation parameters from our past runs, check that a graphene crystal is loaded, then exfoliate one chip and search it for flakes."}
+      - tool:
+          agent: orchestrator
+          name: update_plan
+          args:
+            note: initial plan
+            plan:
+              - {id: s1, title: Exfoliation parameters from run records, owner: advisor}
+              - {id: s2, title: Check graphene carrier and bare chips, owner: eyes}
+              - {id: s3, title: Exfoliate graphene onto one bare chip, owner: hands}
+              - {id: s4, title: Search the chip under the microscope, owner: hands}
+              - {id: s5, title: Report the best flake, owner: orchestrator}
+      - delegate: {to: advisor, task: "Recommend exfoliation parameters for graphene (Gr) from the run records. Return target_temp_c, dwell_s, num_massages, peel_speed with your confidence."}
+      - tool: {agent: advisor, name: get_experience, args: {material: Gr}, save_as: experience}
+      - done: {agent: advisor, summary: "Experience: {{experience._summary}} Recommend the lab defaults (50 C, 30 s dwell, 2 massages, peel speed 200); low confidence until we have more runs."}
+      - delegate: {to: eyes, task: "Check that a graphene (Gr) crystal carrier is loaded and how many bare chips there are."}
+      - tool: {agent: eyes, name: inspect_bench, args: {}, save_as: look}
+      - tool: {agent: eyes, name: list_samples, args: {}, save_as: setup}
+      - done: {agent: eyes, summary: "Bench: {{look._summary}}. Lab setup: {{setup._summary}}; a Gr carrier is loaded."}
+      - delegate: {to: hands, task: "Exfoliate graphene (Gr) onto one bare chip with target_temp_c 50, dwell_s 30, num_massages 2, peel_speed 200."}
+      - tool: {agent: hands, name: exfoliate_chips,
+               args: {material: Gr, num_chips: 1, target_temp_c: 50, dwell_s: 30,
+                      num_massages: 2, peel_speed: 200}, save_as: exf}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{exf.job_id}}", timeout_s: 600},
+               save_as: exf_done}
+      - branch:
+          result_of: exf_done
+          cases:
+            ok: [{done: {agent: hands, summary: "Exfoliation finished; every step passed its check."}}]
+            corrected: [{done: {agent: hands, summary: "Exfoliation finished after automatic corrections."}}]
+          default:
+            - tool: {agent: hands, name: request_human_help,
+                     args: {reason: "graphene exfoliation did not finish", job_id: "{{exf.job_id}}"}}
+            - done: {agent: hands, summary: "Exfoliation did not finish; asked a human for help.", step_status: failed}
+      - delegate: {to: hands, task: "Search the chip you just exfoliated for graphene flakes under the microscope."}
+      - tool: {agent: hands, name: search_chip, args: {material: Gr}, save_as: search}
+      - tool: {agent: hands, name: wait_job, args: {job_id: "{{search.job_id}}", timeout_s: 600},
+               save_as: search_done}
+      - done: {agent: hands, summary: "Search job {{search.job_id}}: {{search_done._summary}}."}
+      - tool: {agent: orchestrator, name: list_samples, args: {kind: flake, status: catalogued},
+               save_as: flakes}
+      - say: {agent: orchestrator, text: "Done. The search catalogued {{flakes._summary}} with 20X and 100X images; you can see them in the sample list. Tell me which kind of flake you need (for example monolayer) and I will hand them to the picker."}

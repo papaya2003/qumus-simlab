@@ -1,0 +1,897 @@
+{
+  "scope": "Minimal recorded v2 successful preparation evidence and its unchanged semantic plan parameters; isolated ledger replay only, no device execution.",
+  "source_recording_sha256": "020daa727de7eb160e4835550ab7cb621a035939ccafc3e407e092f98e3f3ff9",
+  "requirements": {
+    "project_id": "prj_202372b8c60d",
+    "requirements": {
+      "reactive_material": "Gr",
+      "metal": "Pd",
+      "protective_material": "hBN",
+      "protective_role": "nonreactive_pickup_and_protection",
+      "substrate": "silicon",
+      "assembly_order": "hBN/reactive_material/metal/silicon",
+      "save_images": true,
+      "retain_source_provenance": true,
+      "reaction_kind": "material_metal"
+    },
+    "instruction_id": "ins_2eb73311d905",
+    "original_request": "In the simulated lab, prepare and run hBN/Gr/Pd/silicon. hBN must remain topmost and nonreactive. stamp_01 carries mica. reactor_chip_01 already has Pd deposited on silicon, preparation pd-sim-01 by simulation-operator, and is in reactor storage. Use ordinary source stock, retain images and provenance, meet the configured qualitative simulation goal, and finish cold in reactor storage. This is simulation acceptance; real chemistry remains unverified. If a requirement cannot be met, preserve the evidence and report it honestly.",
+    "adopted_advisor_event_id": null,
+    "adopted_advisor_response": null,
+    "revision_reason": null,
+    "previous_event_id": null
+  },
+  "step": {
+    "id": "s6",
+    "title": "Prepare and assemble the confirmed hBN/Gr pair on reactor_chip_01",
+    "owner": "hands",
+    "status": "done",
+    "note": "Assemble the confirmed top-first pair hBN chip_001_f003 / Gr chip_002_f010 over the reported Pd-on-silicon carrier.",
+    "operation": "prepare_material_metal",
+    "sample_outcomes": [
+      {
+        "sample_id": "reactor_chip_01",
+        "location": "reactor_chip_slot_1",
+        "status": "material_metal_prepared",
+        "in_storage": true
+      },
+      {
+        "sample_id": "chip_001_f003",
+        "location": "reactor_chip_01",
+        "status": "stacked",
+        "in_storage": false
+      },
+      {
+        "sample_id": "chip_002_f010",
+        "location": "reactor_chip_01",
+        "status": "stacked",
+        "in_storage": false
+      }
+    ],
+    "materials": [
+      "hBN",
+      "Gr"
+    ],
+    "experiment_stage": null,
+    "operation_args": {
+      "chip_id": "reactor_chip_01",
+      "top_material": "hBN",
+      "reactive_material": "Gr",
+      "metal": "Pd",
+      "substrate": "silicon",
+      "stamp_id": "stamp_01",
+      "hbn_flake_id": "chip_001_f003",
+      "gr_flake_id": "chip_002_f010",
+      "retain_images": true,
+      "retain_source_provenance": true
+    },
+    "reactor_outcome": null
+  },
+  "job": {
+    "id": "run_6e372cfd1e6c",
+    "flow": "prepare_material_metal",
+    "status": "succeeded",
+    "params": {
+      "flake_ids": [
+        "chip_001_f003",
+        "chip_002_f010"
+      ],
+      "target_chip_id": "reactor_chip_01",
+      "target_xy_mm": [
+        1.25,
+        5.0
+      ],
+      "design_path": null,
+      "pickup_temp_c": 80.0,
+      "drop_temp_c": 135.0,
+      "melt_temp_c": 150.0,
+      "stamp_id": "stamp_01",
+      "stamp_slot": "right_stamp_1",
+      "flake_chips": {
+        "chip_001_f003": "chip_001",
+        "chip_002_f010": "chip_002"
+      },
+      "materials": {
+        "chip_001_f003": "hBN",
+        "chip_002_f010": "Gr"
+      },
+      "home_slots": {
+        "chip_001": "mid_chip_1",
+        "chip_002": "mid_chip_2",
+        "reactor_chip_01": "right_chip_2"
+      },
+      "stamp_swaps": [],
+      "project_id": "prj_202372b8c60d",
+      "protocol_id": "qualitative-material-metal-v1",
+      "fixture_instruction_id": null,
+      "reactor_home_slot": "reactor_chip_slot_1",
+      "requirements_event_id": 114,
+      "source_chip_ids": {
+        "chip_001_f003": "chip_001",
+        "chip_002_f010": "chip_002"
+      },
+      "images": [],
+      "receipt_inputs": {
+        "project_id": "prj_202372b8c60d",
+        "requirements_event_id": 114,
+        "chip_id": "reactor_chip_01",
+        "top_first_flake_ids": [
+          "chip_001_f003",
+          "chip_002_f010"
+        ],
+        "layer_order": [
+          "hBN",
+          "Gr",
+          "Pd",
+          "silicon"
+        ],
+        "stamp_id": "stamp_01",
+        "stamp_film": "mica",
+        "source_chip_ids": {
+          "chip_001_f003": "chip_001",
+          "chip_002_f010": "chip_002"
+        },
+        "metal_coating": {
+          "metal": "Pd",
+          "substrate": "silicon",
+          "preparation_id": "pd-sim-01",
+          "prepared_by": "simulation-operator",
+          "source": "operator_report",
+          "instruction_id": "ins_2eb73311d905",
+          "ts": 1793140683.6406028
+        },
+        "source_images": {
+          "chip_001_f003": {
+            "20x": "recorded-v2/images/microscope/microscope_000003.png",
+            "100x": "recorded-v2/images/microscope/microscope_000004.png"
+          },
+          "chip_002_f010": {
+            "20x": "recorded-v2/images/microscope/microscope_000022.png",
+            "100x": "recorded-v2/images/microscope/microscope_000023.png"
+          }
+        },
+        "protocol_id": "qualitative-material-metal-v1",
+        "scope": "device_simulation",
+        "model_assumptions": {
+          "protocol_id": "qualitative-material-metal-v1",
+          "provenance": "uncalibrated_software_assumptions",
+          "PC": {
+            "pickup_c": 90.0,
+            "release_c": 170.0,
+            "release_band_c": 3.0,
+            "pickup_probability": 0.92,
+            "release_probability": 0.9,
+            "support_retained_on_stamp": false
+          },
+          "mica": {
+            "pickup_c": 80.0,
+            "release_c": 150.0,
+            "release_band_c": 3.0,
+            "pickup_probability": 0.92,
+            "release_probability": 0.9,
+            "support_retained_on_stamp": true
+          },
+          "temperature_c": 300.0,
+          "flow_sccm": 50.0,
+          "duration_s": 180.0,
+          "activation_temperature_c": 250.0,
+          "activation_flow_sccm": 10.0,
+          "characteristic_time_s": 60.0,
+          "success_probability": 0.9,
+          "unsuccessful_max_progress": 0.25,
+          "minimum_progress": 0.8,
+          "observation_available": true
+        },
+        "simulated_motion_verified": true,
+        "physical_motion_verified": false,
+        "chemistry_verified": false
+      }
+    }
+  },
+  "samples": [
+    {
+      "id": "reactor_chip_01",
+      "kind": "chip",
+      "location": "reactor_chip_slot_1",
+      "status": "reactor_processed",
+      "props": {
+        "reactor_substrate": true,
+        "size_mm": [
+          2.5,
+          10
+        ],
+        "preparation": "synthetic seed representing a manually cut chip",
+        "image_source": "simulated",
+        "metal_coating": {
+          "metal": "Pd",
+          "substrate": "silicon",
+          "preparation_id": "pd-sim-01",
+          "prepared_by": "simulation-operator",
+          "source": "operator_report",
+          "instruction_id": "ins_2eb73311d905",
+          "ts": 1793140683.6406028
+        },
+        "pose": {
+          "x": 1319.4441186835818,
+          "y": 139.79236678317935,
+          "z": 0.0,
+          "rotation": -0.14405794021576712
+        },
+        "location_uncertain": false,
+        "last_seen": null,
+        "home_slot": "reactor_chip_slot_1",
+        "pose_on_stage": {
+          "x": 674.9085940775074,
+          "y": 339.6594170525299,
+          "z": 0.0,
+          "rotation": 0.24385984175746916
+        },
+        "rotation_deg": 1.1268,
+        "corner_stage_xy": [
+          1.3934,
+          85.0824
+        ],
+        "corner_image": "recorded-v2/images/microscope/microscope_000077.png",
+        "material_metal_preparation": {
+          "project_id": "prj_202372b8c60d",
+          "requirements_event_id": 114,
+          "chip_id": "reactor_chip_01",
+          "top_first_flake_ids": [
+            "chip_001_f003",
+            "chip_002_f010"
+          ],
+          "layer_order": [
+            "hBN",
+            "Gr",
+            "Pd",
+            "silicon"
+          ],
+          "stamp_id": "stamp_01",
+          "stamp_film": "mica",
+          "source_chip_ids": {
+            "chip_001_f003": "chip_001",
+            "chip_002_f010": "chip_002"
+          },
+          "metal_coating": {
+            "metal": "Pd",
+            "substrate": "silicon",
+            "preparation_id": "pd-sim-01",
+            "prepared_by": "simulation-operator",
+            "source": "operator_report",
+            "instruction_id": "ins_2eb73311d905",
+            "ts": 1793140683.6406028
+          },
+          "source_images": {
+            "chip_001_f003": {
+              "20x": "recorded-v2/images/microscope/microscope_000003.png",
+              "100x": "recorded-v2/images/microscope/microscope_000004.png"
+            },
+            "chip_002_f010": {
+              "20x": "recorded-v2/images/microscope/microscope_000022.png",
+              "100x": "recorded-v2/images/microscope/microscope_000023.png"
+            }
+          },
+          "protocol_id": "qualitative-material-metal-v1",
+          "scope": "device_simulation",
+          "model_assumptions": {
+            "protocol_id": "qualitative-material-metal-v1",
+            "provenance": "uncalibrated_software_assumptions",
+            "PC": {
+              "pickup_c": 90.0,
+              "release_c": 170.0,
+              "release_band_c": 3.0,
+              "pickup_probability": 0.92,
+              "release_probability": 0.9,
+              "support_retained_on_stamp": false
+            },
+            "mica": {
+              "pickup_c": 80.0,
+              "release_c": 150.0,
+              "release_band_c": 3.0,
+              "pickup_probability": 0.92,
+              "release_probability": 0.9,
+              "support_retained_on_stamp": true
+            },
+            "temperature_c": 300.0,
+            "flow_sccm": 50.0,
+            "duration_s": 180.0,
+            "activation_temperature_c": 250.0,
+            "activation_flow_sccm": 10.0,
+            "characteristic_time_s": 60.0,
+            "success_probability": 0.9,
+            "unsuccessful_max_progress": 0.25,
+            "minimum_progress": 0.8,
+            "observation_available": true
+          },
+          "simulated_motion_verified": true,
+          "physical_motion_verified": false,
+          "chemistry_verified": false,
+          "preparation_job_id": "run_6e372cfd1e6c",
+          "release_images": [
+            "recorded-v2/images/microscope/microscope_000080.png"
+          ],
+          "placements": {
+            "chip_002_f010": {
+              "flake": {
+                "id": "chip_002_f010",
+                "material": "Gr",
+                "layers": 56,
+                "source_chip_id": "chip_002",
+                "batch_id": "tape_segment_2_use_0",
+                "outline_mm": [
+                  [
+                    4.93311074316686,
+                    1.2405889075729115
+                  ],
+                  [
+                    4.931684677324035,
+                    1.2838577524928259
+                  ],
+                  [
+                    4.918119484278562,
+                    1.2980312626546247
+                  ],
+                  [
+                    4.9067987705765885,
+                    1.303419281288072
+                  ],
+                  [
+                    4.900644568395674,
+                    1.2737072151623743
+                  ],
+                  [
+                    4.91013562772191,
+                    1.252387383761391
+                  ],
+                  [
+                    4.920148758612928,
+                    1.2471542274571104
+                  ]
+                ]
+              },
+              "target_center_mm": [
+                -0.015263665514584702,
+                0.006202024223915023
+              ],
+              "rotation_deg": -2.9845336880634936
+            },
+            "chip_001_f003": {
+              "flake": {
+                "id": "chip_001_f003",
+                "material": "hBN",
+                "layers": 16,
+                "source_chip_id": "chip_001",
+                "batch_id": "tape_segment_1_use_0",
+                "outline_mm": [
+                  [
+                    -3.4369250805555542,
+                    -3.9429672551737376
+                  ],
+                  [
+                    -3.4396209986886292,
+                    -3.9621841870500765
+                  ],
+                  [
+                    -3.4405605685670118,
+                    -3.976993444346374
+                  ],
+                  [
+                    -3.431417378502024,
+                    -3.9921787083186846
+                  ],
+                  [
+                    -3.418138949532311,
+                    -3.9998333082609245
+                  ],
+                  [
+                    -3.4066480814782545,
+                    -3.997081427190807
+                  ],
+                  [
+                    -3.4133138530789893,
+                    -3.96948803870322
+                  ],
+                  [
+                    -3.421150677524022,
+                    -3.9591883751127463
+                  ]
+                ]
+              },
+              "target_center_mm": [
+                -0.010844681755320587,
+                0.012763113847253137
+              ],
+              "rotation_deg": -0.637765654207723
+            }
+          }
+        },
+        "reactor_home_slot": "reactor_chip_slot_1",
+        "images": {
+          "reactor": "recorded-v2/images/reactor/reactor_microscope_000018.png"
+        }
+      }
+    },
+    {
+      "id": "stamp_01",
+      "kind": "stamp",
+      "location": "right_stamp_1",
+      "status": "used",
+      "props": {
+        "film": "mica",
+        "support": {
+          "film_type": "mica",
+          "instruction_id": "ins_2eb73311d905",
+          "source": "operator_report",
+          "ts": 1793140680.406123
+        },
+        "support_history": [
+          {
+            "film_type": "mica",
+            "instruction_id": "ins_2eb73311d905",
+            "source": "operator_report",
+            "ts": 1793140680.406123
+          }
+        ],
+        "pose": {
+          "x": 864.7362657882853,
+          "y": 195.92920043377828,
+          "z": 0.0,
+          "rotation": 0.15491606955931603
+        },
+        "location_uncertain": false,
+        "last_seen": null,
+        "optical_shift_mm": 0.3,
+        "touch_z": 4.9859,
+        "stack": []
+      }
+    },
+    {
+      "id": "chip_001_f003",
+      "kind": "flake",
+      "location": "reactor_chip_01",
+      "status": "stacked",
+      "props": {
+        "material": "hBN",
+        "chip_id": "chip_001",
+        "thickness_label": "0-10",
+        "labels": {
+          "10x": "0-10",
+          "20x": "0-10",
+          "100x": "0-10"
+        },
+        "area_um2": 1198.7,
+        "stage_xy": [
+          3.644,
+          83.922
+        ],
+        "rel_corner_mm": [
+          1.5709,
+          1.0243
+        ],
+        "confidence": 0.93,
+        "images": {
+          "20x": "recorded-v2/images/microscope/microscope_000003.png",
+          "100x": "recorded-v2/images/microscope/microscope_000004.png"
+        },
+        "sim_id": "synthetic_flake_f9f190e6be04055c9df9",
+        "image_source": "simulated",
+        "stage_from_corner_mm": [
+          -1.5645,
+          -1.0341
+        ],
+        "reactor_pickup_assessment": {
+          "flake_id": "chip_001_f003",
+          "source_chip_id": "chip_001",
+          "clear": true,
+          "neighbours_per_view": [
+            0,
+            0,
+            0
+          ],
+          "clear_radius_mm": 0.85,
+          "nearest_other_mm": null,
+          "source": "focused_optical_neighbourhood",
+          "timestamp": 1800000835.3644907,
+          "job_id": "run_6e372cfd1e6c",
+          "images": [
+            "recorded-v2/images/microscope/microscope_000069.png"
+          ]
+        },
+        "material_placement": {
+          "flake": {
+            "id": "chip_001_f003",
+            "material": "hBN",
+            "layers": 16,
+            "source_chip_id": "chip_001",
+            "batch_id": "tape_segment_1_use_0",
+            "outline_mm": [
+              [
+                -3.4369250805555542,
+                -3.9429672551737376
+              ],
+              [
+                -3.4396209986886292,
+                -3.9621841870500765
+              ],
+              [
+                -3.4405605685670118,
+                -3.976993444346374
+              ],
+              [
+                -3.431417378502024,
+                -3.9921787083186846
+              ],
+              [
+                -3.418138949532311,
+                -3.9998333082609245
+              ],
+              [
+                -3.4066480814782545,
+                -3.997081427190807
+              ],
+              [
+                -3.4133138530789893,
+                -3.96948803870322
+              ],
+              [
+                -3.421150677524022,
+                -3.9591883751127463
+              ]
+            ]
+          },
+          "target_center_mm": [
+            -0.010844681755320587,
+            0.012763113847253137
+          ],
+          "rotation_deg": -0.637765654207723
+        },
+        "geometry_area_um2": 1107.3464786432837,
+        "measured_area_um2": 1198.7
+      }
+    },
+    {
+      "id": "chip_002_f010",
+      "kind": "flake",
+      "location": "reactor_chip_01",
+      "status": "stacked",
+      "props": {
+        "material": "Gr",
+        "chip_id": "chip_002",
+        "thickness_label": "manylayer",
+        "labels": {
+          "10x": "manylayer",
+          "20x": "manylayer",
+          "100x": "manylayer"
+        },
+        "area_um2": 1298.1,
+        "stage_xy": [
+          -5.0005,
+          79.0724
+        ],
+        "rel_corner_mm": [
+          9.9251,
+          6.2733
+        ],
+        "confidence": 0.88,
+        "images": {
+          "20x": "recorded-v2/images/microscope/microscope_000022.png",
+          "100x": "recorded-v2/images/microscope/microscope_000023.png"
+        },
+        "sim_id": "synthetic_flake_ade13a13125abbcb335e",
+        "image_source": "simulated",
+        "stage_from_corner_mm": [
+          -9.8982,
+          -6.3157
+        ],
+        "reactor_pickup_assessment": {
+          "flake_id": "chip_002_f010",
+          "source_chip_id": "chip_002",
+          "clear": true,
+          "neighbours_per_view": [
+            0,
+            0,
+            0
+          ],
+          "clear_radius_mm": 0.85,
+          "nearest_other_mm": null,
+          "source": "focused_optical_neighbourhood",
+          "timestamp": 1800001139.959252,
+          "job_id": "run_6e372cfd1e6c",
+          "images": [
+            "recorded-v2/images/microscope/microscope_000075.png"
+          ]
+        },
+        "material_placement": {
+          "flake": {
+            "id": "chip_002_f010",
+            "material": "Gr",
+            "layers": 56,
+            "source_chip_id": "chip_002",
+            "batch_id": "tape_segment_2_use_0",
+            "outline_mm": [
+              [
+                4.93311074316686,
+                1.2405889075729115
+              ],
+              [
+                4.931684677324035,
+                1.2838577524928259
+              ],
+              [
+                4.918119484278562,
+                1.2980312626546247
+              ],
+              [
+                4.9067987705765885,
+                1.303419281288072
+              ],
+              [
+                4.900644568395674,
+                1.2737072151623743
+              ],
+              [
+                4.91013562772191,
+                1.252387383761391
+              ],
+              [
+                4.920148758612928,
+                1.2471542274571104
+              ]
+            ]
+          },
+          "target_center_mm": [
+            -0.015263665514584702,
+            0.006202024223915023
+          ],
+          "rotation_deg": -2.9845336880634936
+        },
+        "geometry_area_um2": 1342.3226380124402,
+        "measured_area_um2": 1298.1
+      }
+    },
+    {
+      "id": "chip_001",
+      "kind": "chip",
+      "location": "mid_chip_1",
+      "status": "searched",
+      "props": {
+        "substrate": "SiO2/Si 285nm",
+        "pose": {
+          "x": 475.0819047262358,
+          "y": 180.34707532448087,
+          "z": 0.0,
+          "rotation": -1.4508358889362485
+        },
+        "location_uncertain": false,
+        "last_seen": null,
+        "material": "hBN",
+        "from_carrier": "carrier_hbn_01",
+        "home_slot": "mid_chip_1",
+        "pose_on_stage": {
+          "x": 674.5701554967934,
+          "y": 340.00319199760327,
+          "z": 0.0,
+          "rotation": 0.5453847548577734
+        },
+        "rotation_deg": 0.3446,
+        "corner_stage_xy": [
+          5.2206,
+          84.9569
+        ],
+        "corner_image": "recorded-v2/images/microscope/microscope_000066.png"
+      }
+    },
+    {
+      "id": "chip_002",
+      "kind": "chip",
+      "location": "mid_chip_2",
+      "status": "searched",
+      "props": {
+        "substrate": "SiO2/Si 285nm",
+        "pose": {
+          "x": 509.92441656863247,
+          "y": 180.01010600746926,
+          "z": 0.0,
+          "rotation": 1.4024333499281423
+        },
+        "location_uncertain": false,
+        "last_seen": null,
+        "material": "Gr",
+        "from_carrier": "carrier_gr_01",
+        "home_slot": "mid_chip_2",
+        "pose_on_stage": {
+          "x": 675.1771534191445,
+          "y": 339.8589265767671,
+          "z": 0.0,
+          "rotation": -1.7283615528291794
+        },
+        "rotation_deg": -1.9862,
+        "corner_stage_xy": [
+          5.1256,
+          84.9987
+        ],
+        "corner_image": "recorded-v2/images/microscope/microscope_000072.png"
+      }
+    }
+  ],
+  "prepared_event": {
+    "chip_id": "reactor_chip_01",
+    "material_metal_preparation": {
+      "project_id": "prj_202372b8c60d",
+      "requirements_event_id": 114,
+      "chip_id": "reactor_chip_01",
+      "top_first_flake_ids": [
+        "chip_001_f003",
+        "chip_002_f010"
+      ],
+      "layer_order": [
+        "hBN",
+        "Gr",
+        "Pd",
+        "silicon"
+      ],
+      "stamp_id": "stamp_01",
+      "stamp_film": "mica",
+      "source_chip_ids": {
+        "chip_001_f003": "chip_001",
+        "chip_002_f010": "chip_002"
+      },
+      "metal_coating": {
+        "metal": "Pd",
+        "substrate": "silicon",
+        "preparation_id": "pd-sim-01",
+        "prepared_by": "simulation-operator",
+        "source": "operator_report",
+        "instruction_id": "ins_2eb73311d905",
+        "ts": 1793140683.6406028
+      },
+      "source_images": {
+        "chip_001_f003": {
+          "20x": "recorded-v2/images/microscope/microscope_000003.png",
+          "100x": "recorded-v2/images/microscope/microscope_000004.png"
+        },
+        "chip_002_f010": {
+          "20x": "recorded-v2/images/microscope/microscope_000022.png",
+          "100x": "recorded-v2/images/microscope/microscope_000023.png"
+        }
+      },
+      "protocol_id": "qualitative-material-metal-v1",
+      "scope": "device_simulation",
+      "model_assumptions": {
+        "protocol_id": "qualitative-material-metal-v1",
+        "provenance": "uncalibrated_software_assumptions",
+        "PC": {
+          "pickup_c": 90.0,
+          "release_c": 170.0,
+          "release_band_c": 3.0,
+          "pickup_probability": 0.92,
+          "release_probability": 0.9,
+          "support_retained_on_stamp": false
+        },
+        "mica": {
+          "pickup_c": 80.0,
+          "release_c": 150.0,
+          "release_band_c": 3.0,
+          "pickup_probability": 0.92,
+          "release_probability": 0.9,
+          "support_retained_on_stamp": true
+        },
+        "temperature_c": 300.0,
+        "flow_sccm": 50.0,
+        "duration_s": 180.0,
+        "activation_temperature_c": 250.0,
+        "activation_flow_sccm": 10.0,
+        "characteristic_time_s": 60.0,
+        "success_probability": 0.9,
+        "unsuccessful_max_progress": 0.25,
+        "minimum_progress": 0.8,
+        "observation_available": true
+      },
+      "simulated_motion_verified": true,
+      "physical_motion_verified": false,
+      "chemistry_verified": false,
+      "preparation_job_id": "run_6e372cfd1e6c",
+      "release_images": [
+        "recorded-v2/images/microscope/microscope_000080.png"
+      ],
+      "placements": {
+        "chip_002_f010": {
+          "flake": {
+            "id": "chip_002_f010",
+            "material": "Gr",
+            "layers": 56,
+            "source_chip_id": "chip_002",
+            "batch_id": "tape_segment_2_use_0",
+            "outline_mm": [
+              [
+                4.93311074316686,
+                1.2405889075729115
+              ],
+              [
+                4.931684677324035,
+                1.2838577524928259
+              ],
+              [
+                4.918119484278562,
+                1.2980312626546247
+              ],
+              [
+                4.9067987705765885,
+                1.303419281288072
+              ],
+              [
+                4.900644568395674,
+                1.2737072151623743
+              ],
+              [
+                4.91013562772191,
+                1.252387383761391
+              ],
+              [
+                4.920148758612928,
+                1.2471542274571104
+              ]
+            ]
+          },
+          "target_center_mm": [
+            -0.015263665514584702,
+            0.006202024223915023
+          ],
+          "rotation_deg": -2.9845336880634936
+        },
+        "chip_001_f003": {
+          "flake": {
+            "id": "chip_001_f003",
+            "material": "hBN",
+            "layers": 16,
+            "source_chip_id": "chip_001",
+            "batch_id": "tape_segment_1_use_0",
+            "outline_mm": [
+              [
+                -3.4369250805555542,
+                -3.9429672551737376
+              ],
+              [
+                -3.4396209986886292,
+                -3.9621841870500765
+              ],
+              [
+                -3.4405605685670118,
+                -3.976993444346374
+              ],
+              [
+                -3.431417378502024,
+                -3.9921787083186846
+              ],
+              [
+                -3.418138949532311,
+                -3.9998333082609245
+              ],
+              [
+                -3.4066480814782545,
+                -3.997081427190807
+              ],
+              [
+                -3.4133138530789893,
+                -3.96948803870322
+              ],
+              [
+                -3.421150677524022,
+                -3.9591883751127463
+              ]
+            ]
+          },
+          "target_center_mm": [
+            -0.010844681755320587,
+            0.012763113847253137
+          ],
+          "rotation_deg": -0.637765654207723
+        }
+      }
+    },
+    "images": [
+      "recorded-v2/images/microscope/microscope_000080.png"
+    ],
+    "scope": "device_simulation"
+  }
+}

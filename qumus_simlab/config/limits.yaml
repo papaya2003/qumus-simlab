@@ -1,0 +1,181 @@
+# Safety limits, one section per device (spec 7.2).
+#
+# !!! PLACEHOLDER VALUES !!!  None of these numbers come from the lab yet
+# (spec 15.3 Q4). They are chosen so the testbench runs; they MUST be replaced
+# with lab-measured values before anything touches real hardware (stage 3).
+#
+# Every device that can move or heat MUST have an entry here; the SafetyGate
+# refuses commands to a moving/heating device that has none.
+
+arms:
+  # Arm frames (bench.yaml): x, y relative to the arm base; reach_mm = radius.
+  arm_left:     # v1: exfoliation arm (COM7)
+    x: [-280, 280]
+    y: [-80, 280]
+    z: [0, 150]
+    rotation: [-180, 180]
+    max_speed: 3000        # mm/min (G-code F)
+    reach_mm: 280
+    floors:
+      # pressing the tape onto a chip: the nozzle's rubber tip meets the tape at
+      # z 1.2 (bench.yaml press_contact_z); deeper than 0.6 below it could crack the chip
+      - name: press_on_exfoliation_stage
+        region: {x: [-20, 20], y: [172, 212]}     # arm_left frame (stage at 0, 192)
+        min_z: 0.6
+  arm_right:    # v1: search/stacking arm (COM23)
+    x: [-280, 280]
+    y: [-80, 280]
+    z: [0, 150]
+    rotation: [-180, 180]
+    max_speed: 3000
+    reach_mm: 280
+  arm_reactor: # synthetic opt-in module only
+    x: [-280, 280]
+    y: [-80, 280]
+    z: [0, 150]
+    rotation: [-180, 180]
+    max_speed: 3000
+    reach_mm: 280
+
+stages:
+  reactor_slot:
+    x: [-4, 4]
+    y: [-4, 4]
+    z: [0, 0]
+    rotation: [0, 0]
+  reactor_insert:
+    x: [0, 0]
+    y: [0, 170]
+    z: [0, 0]
+    rotation: [0, 0]
+  transfer_stage:       # load (0, 0) right below the objective; under it at (0, 80) (bench.yaml)
+    source: synthetic
+    calibration_id: synthetic-stage-envelope-v2
+    simulation_only: true
+    x: [-25, 25]
+    y: [-10, 100]
+    z: [0, 0]           # normal travel is mechanical Z 0; independent microscope focus
+    fine_x: [-1, 1]
+    fine_y: [-1, 1]
+    rotation: [-180, 180]
+
+heaters:
+  reactor_heater:
+    min_celsius: 22
+    max_celsius: 950
+    max_ramp_c_per_min: 120
+    max_on_seconds: 3600
+    overshoot_margin: 10
+  exfoliation_heater:   # v1: TP3005P supply + relay under the exfoliation stage
+    max_celsius: 100     # v1 approved setpoints go up to 90 C
+    max_ramp_c_per_min: 40
+    max_on_seconds: 1800
+    overshoot_margin: 10
+  stamp_heater:
+    max_celsius: 200
+    max_ramp_c_per_min: 60     # setpoint may not jump faster than this
+    max_on_seconds: 7200       # heater is forced off after this long (v1 had no timeout)
+    overshoot_margin: 15       # reading above max_celsius + margin = runaway
+
+tapes:
+  exfoliator:           # v1: printer (apply/peel arc) + tape reel motors
+    peel_speed: [50, 500]      # G-code F, v1 validate_tape_peel_speed_v
+    peel_angle_deg: [10, 90]   # tape vs stage; v1 had one fixed arc (about 30-40 deg)
+    max_advance_mm: 300
+
+microscopes:
+  reactor_microscope:
+    focus: [-1, 1]
+    objectives: [10, 20]
+  microscope:
+    source: synthetic
+    calibration_id: synthetic-focus-stroke-v2
+    simulation_only: true
+    focus: [-3, 3]
+    objectives: [5, 10, 20, 50, 100]
+
+gas_flows:
+  reactor_flow: {sccm: [0, 400]}
+
+reactor_interlocks:
+  - name: synthetic_reactor_access
+    stage: reactor_slot
+    insertion_stage: reactor_insert
+    arm: arm_reactor
+    heater: reactor_heater
+    gas_flow: reactor_flow
+    loading_region: {x: [105, 135], y: [129, 159]}
+    arm_clear_z: 60
+    loading_tolerance_mm: 0.2
+    process_y: [150, 170]
+    access_max_celsius: 80
+    access_max_flow_sccm: 0.5
+    max_fine_step_mm: 2
+
+manipulators:
+  transfer_arm:         # stamp holder: x/y/z translation stage (bench.yaml transfer_arm)
+    source: synthetic
+    calibration_id: synthetic-stamp-envelope-v2
+    simulation_only: true
+    x: [0, 200]
+    y: [0, 100]
+    z: [4.7, 12]        # never press the stamp deeper than this (contact ~5.0)
+    max_speed: 80.0     # mm/s (x/y rail travel, testbench.yaml manipulator_travel_speed_mm_s)
+    stage_focus_mm: 0.0 # focusing no longer changes mechanical stage height
+
+# Simulation-only chosen mechanical envelopes, not measurements of the apparatus.
+# World origin and axis locations match bench.yaml; optical apparent offsets do
+# not affect these physical clearances. A measured hardware configuration must
+# supply its own provenance, calibration and carried sample geometry.
+geometry:
+  source: synthetic
+  calibration_id: synthetic-swept-envelope-v2
+  simulation_only: true
+  stage: transfer_stage
+  manipulator: transfer_arm
+  microscope: microscope
+  stage_origin_xy: [740, 340]
+  manipulator_origin_xy: [700, 330]
+  objective_xy: [740, 420]
+  objective_radius_mm: 2
+  # v1 molecule_drop_down lifts the stamp 5 mm from Z 4.9 to 9.9 under the
+  # objective in the real lab, so the objective sits higher than that (#204).
+  objective_bottom_at_focus_zero_z: 12
+  sample_clearance_mm: 0.5
+  stamp_clearance_mm: 0.5
+  stamp_radius_mm: 12.5
+  stamp_top_above_holder_mm: 1
+  sample_height_above_stage_mm: 1.5
+  carried_radius_mm: 15
+  low_stamp_gap_mm: 6.2
+
+stamp_interlocks:
+  # "While the stamp hangs low over the transfer stage, the stage may not move."
+  - name: transfer_stage_locked_while_stamp_low
+    manipulator: transfer_arm
+    over: {x: [27.5, 52.5], y: [77.5, 102.5]}  # head over the stage (bench.yaml over_stage)
+    # holder z minus stage z. Above any contact gap: the stage z that focuses a
+    # chip differs per chip (its height, +-0.9 mm), the dome touches ~5.0 above it
+    below_z: 6.2
+    blocks: [transfer_stage]
+  # "While the stamp hangs over the stage, the right arm stays out above it."
+  - name: arm_right_out_while_stamp_over_stage
+    manipulator: transfer_arm
+    over: {x: [27.5, 52.5], y: [77.5, 102.5]}  # head over the stage (bench.yaml over_stage)
+    arm: arm_right
+    region: {x: [-65, 25], y: [254, 334]}     # arm_right frame: world x 700-790, y 380-460 (under the objective)
+    arm_below_z: 60
+
+interlocks:
+  # "While the exfoliation arm is low over the exfoliation stage, the tape may not move."
+  - name: exfoliator_locked_while_arm_left_low
+    arm: arm_left
+    region: {x: [-20, 20], y: [172, 212]}     # arm_left frame
+    below_z: 20
+    blocks: [exfoliator]
+  # "While an arm is above the transfer stage, the transfer stage may not move."
+  - name: transfer_stage_locked_while_arm_right_above
+    arm: arm_right
+    region: {x: [-55, 5], y: [174, 314]}      # arm_right frame: world x 710-770, y 310-450 (the stage's lane)
+    below_z: 60
+    blocks: [transfer_stage, transfer_arm]

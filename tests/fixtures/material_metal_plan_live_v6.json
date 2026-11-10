@@ -1,0 +1,271 @@
+{
+  "source": "Private normal simulated live v6; saved plan before premature human-help request. No device execution in replay.",
+  "plan": [
+    {
+      "id": "s1",
+      "title": "Inspect bench, inventory, and reactor readiness",
+      "owner": "eyes",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s2",
+      "title": "Review simulation recipe and establish hBN/Gr/Pd requirements",
+      "owner": "advisor",
+      "status": "done",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s8",
+      "title": "Exfoliate hBN from ordinary source stock",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "exfoliate_chips",
+      "sample_outcomes": [
+        {
+          "sample_id": "carrier_hbn_01",
+          "location": "left_slide_2",
+          "status": "available",
+          "in_storage": false
+        }
+      ],
+      "materials": [
+        "hBN"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "material": "hBN",
+        "from_carrier": "carrier_hbn_01",
+        "target_temp_c": 22,
+        "dwell_s": 10,
+        "num_massages": 1,
+        "press_depth_mm": 0.2,
+        "peel_speed": 500,
+        "peel_angle_deg": 30,
+        "purpose": "secure"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s9",
+      "title": "Search the hBN receiving chip by microscope",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "search_chip",
+      "sample_outcomes": [],
+      "materials": [
+        "hBN"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s10",
+      "title": "Exfoliate Gr from ordinary source stock",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "exfoliate_chips",
+      "sample_outcomes": [
+        {
+          "sample_id": "carrier_gr_01",
+          "location": "left_slide_1",
+          "status": "available",
+          "in_storage": false
+        }
+      ],
+      "materials": [
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "material": "Gr",
+        "from_carrier": "carrier_gr_01",
+        "target_temp_c": 22,
+        "dwell_s": 10,
+        "num_massages": 1,
+        "press_depth_mm": 0.2,
+        "peel_speed": 500,
+        "peel_angle_deg": 30,
+        "purpose": "secure"
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s11",
+      "title": "Search the Gr receiving chip by microscope",
+      "owner": "hands",
+      "status": "pending",
+      "note": "",
+      "operation": "search_chip",
+      "sample_outcomes": [],
+      "materials": [
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s3",
+      "title": "Screen ordinary-source flakes and confirm the hBN/Gr pair",
+      "owner": "picker",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": "screen",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s4",
+      "title": "Assess screened flakes locally on their source chips",
+      "owner": "hands",
+      "status": "pending",
+      "note": "Assess the screened batch on their actual source chips before confirmation; retain local neighbourhood evidence.",
+      "operation": "assess_reactor_inputs",
+      "sample_outcomes": [
+        {
+          "sample_id": "carrier_hbn_01",
+          "location": "left_slide_2",
+          "status": "available",
+          "in_storage": false
+        },
+        {
+          "sample_id": "carrier_gr_01",
+          "location": "left_slide_1",
+          "status": "available",
+          "in_storage": false
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": "screen",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s5",
+      "title": "Confirm the exact top-first hBN/Gr pair",
+      "owner": "picker",
+      "status": "pending",
+      "note": "",
+      "operation": null,
+      "sample_outcomes": [],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": "confirm",
+      "operation_args": {},
+      "reactor_outcome": null
+    },
+    {
+      "id": "s6",
+      "title": "Prepare the confirmed pair on the Pd/silicon carrier",
+      "owner": "hands",
+      "status": "pending",
+      "note": "Bind confirmed hBN/Gr IDs after Picker confirmation; preserve mica support, images, provenance, and hBN/Gr/Pd/silicon order.",
+      "operation": "prepare_material_metal",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "material_metal_prepared",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "chip_id": "reactor_chip_01",
+        "flake_ids": null,
+        "hbn_flake_id": null,
+        "reactive_flake_id": null,
+        "stamp_id": "stamp_01",
+        "stamp_film": "mica",
+        "protocol_id": "qualitative-material-metal-v1",
+        "top_material": "hBN",
+        "reactive_material": "Gr",
+        "metal": "Pd",
+        "substrate": "silicon",
+        "preparation_id": "pd-sim-01",
+        "retain_images": true,
+        "retain_source_provenance": true
+      },
+      "reactor_outcome": null
+    },
+    {
+      "id": "s7",
+      "title": "Run the configured material-metal simulation and finish cold in storage",
+      "owner": "reactor",
+      "status": "pending",
+      "note": "Bind confirmed flake IDs after preparation; run only the configured qualitative simulation and finish cold in reactor storage.",
+      "operation": "reactor_material_metal",
+      "sample_outcomes": [
+        {
+          "sample_id": "reactor_chip_01",
+          "location": null,
+          "status": "reactor_processed",
+          "in_storage": true
+        }
+      ],
+      "materials": [
+        "hBN",
+        "Gr"
+      ],
+      "experiment_stage": null,
+      "operation_args": {
+        "chip_id": "reactor_chip_01",
+        "flake_ids": null,
+        "hbn_flake_id": null,
+        "reactive_flake_id": null,
+        "stamp_id": "stamp_01",
+        "stamp_film": "mica",
+        "protocol_id": "qualitative-material-metal-v1",
+        "top_material": "hBN",
+        "reactive_material": "Gr",
+        "metal": "Pd",
+        "substrate": "silicon",
+        "preparation_id": "pd-sim-01",
+        "retain_images": true,
+        "retain_source_provenance": true,
+        "temperature_c": 300,
+        "flow_sccm": 50,
+        "duration_s": 180
+      },
+      "reactor_outcome": {
+        "chip_id": "reactor_chip_01",
+        "disposition": "cold_storage",
+        "temperature_target_c": null,
+        "flow_target_sccm": 0.0,
+        "rationale": "User requires the completed simulated experiment to end cold in reactor storage."
+      }
+    }
+  ]
+}
