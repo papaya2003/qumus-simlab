@@ -360,9 +360,10 @@ MEMWATCH_EVERY_S = 120.0
 
 
 def _memory_watch(folder: Path) -> None:
-    """QUMUS_SIMLAB_MEMWATCH=<GB>: once the process holds more than that, write the
-    largest Python allocation sites (tracemalloc) to <db folder>/memwatch-*.txt every
-    2 minutes. Diagnosis only; off by default (tracemalloc slows the lab)."""
+    """QUMUS_SIMLAB_MEMWATCH=<GB>: once the process has held more than that, start
+    tracemalloc and write the allocation sites that grew since then to
+    <db folder>/memwatch-*.txt every 2 minutes. Diagnosis only; off by default
+    (tracing slows the lab, so it starts only above the threshold)."""
     import os
     import resource
     import threading
@@ -374,21 +375,22 @@ def _memory_watch(folder: Path) -> None:
         return
     if limit_gb <= 0:
         return
-    tracemalloc.start(12)
 
     def rss_gb() -> float:
         peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         return peak / 2**30 if sys.platform == "darwin" else peak / 2**20
 
     def loop() -> None:
+        while rss_gb() < limit_gb:
+            time.sleep(MEMWATCH_EVERY_S / 4)
+        tracemalloc.start(12)
+        (folder / "memwatch-started.txt").write_text(f"{time.strftime('%H:%M:%S')} max rss {rss_gb():.2f} GB")
         while True:
             time.sleep(MEMWATCH_EVERY_S)
             current, peak = tracemalloc.get_traced_memory()
-            if current / 2**30 < limit_gb and rss_gb() < limit_gb:
-                continue
             snap = tracemalloc.take_snapshot()
-            lines = [f"{time.strftime('%H:%M:%S')} traced {current/2**30:.2f} GB, peak {peak/2**30:.2f} GB, "
-                     f"max rss {rss_gb():.2f} GB"]
+            lines = [f"{time.strftime('%H:%M:%S')} traced since start {current/2**30:.2f} GB, "
+                     f"peak {peak/2**30:.2f} GB, max rss {rss_gb():.2f} GB"]
             for stat in snap.statistics("traceback")[:15]:
                 lines.append(f"\n{stat.size/2**20:.1f} MB in {stat.count} blocks")
                 lines += [f"    {line}" for line in stat.traceback.format()[-12:]]
