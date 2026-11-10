@@ -32,6 +32,10 @@ reactor      http://127.0.0.1:8783/api/describe
 - `--target-bundle` the operator's imported electrode target (lab data: never commit it).
   Without it the built-in eight-electrode target is used.
 - Free: no model, no network.
+- Optional environment variables (sim lab only): `QUMUS_SIMLAB_LEASE_S=<s>` lengthens the
+  contract lease (minimum and default 3 s) when a busy simulation answers heartbeats late;
+  `QUMUS_SIMLAB_MEMWATCH=<GB>` writes `memwatch-*.txt` allocation reports next to `--db` once
+  the process has held more than that (diagnosis only; it slows the lab).
 
 ### Same computer or another computer
 
