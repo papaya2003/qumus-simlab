@@ -26,7 +26,10 @@ store; these three pieces are the only way records cross between them:
     or a placement prop missing from the pushed row keeps the lab's current
     value; a value the sample never had (the brain's own measurement) is taken.
     ``"placement_from_brain": true`` on a sample row takes its placement as
-    given (e.g. a chip carried back by hand). The receipt lists what was kept.
+    given (e.g. a chip carried back by hand). Likewise a picture path outside the
+    lab's folders (a brain-local path not sent as ``"qumus-image:<id>"``) keeps
+    the lab's own path at the same place in the row. The receipt lists what was
+    kept.
 
 ``GET /api/images/<image_id>`` (+ ``/meta``)
     The picture bytes. An image id is the picture's path relative to the
@@ -367,6 +370,7 @@ class LabRecords:
 
     def _guard_placement(self, pushed: dict[str, Any], kept: dict[str, list[str]]) -> dict[str, Any]:
         """Keep the lab's placement where the pushed row carries a stale one (see module doc)."""
+        pushed = self._keep_lab_paths(pushed, kept)
         if pushed.get("placement_from_brain"):
             return pushed
         st = self.store
@@ -402,5 +406,41 @@ class LabRecords:
             names.append(key)
         if names:
             out["props"] = props
-            kept[pushed["id"]] = names
+            kept.setdefault(pushed["id"], []).extend(names)
         return out
+
+    def _foreign_path(self, value: Any) -> bool:
+        """A local file path that is not one of the lab's pictures (e.g. the brain's copy)."""
+        if not isinstance(value, str) or not value or len(value) > 4096 \
+                or value.startswith(IMAGE_PREFIX):
+            return False
+        try:
+            path = Path(value)
+            return path.is_absolute() and self.image_id(path) is None
+        except (OSError, ValueError):
+            return False
+
+    def _keep_lab_paths(self, pushed: dict[str, Any], kept: dict[str, list[str]]) -> dict[str, Any]:
+        """Picture paths outside the lab's folders (a brain-local path that was not sent as
+        "qumus-image:<id>") keep the lab's own path at the same place in the row."""
+        row = self.store.get_sample(pushed["id"])
+        if row is None or not isinstance(pushed.get("props"), dict):
+            return pushed
+        fixed: list[str] = []
+
+        def walk(new: Any, old: Any, where: str) -> Any:
+            if isinstance(new, dict) and isinstance(old, dict):
+                return {k: walk(v, old.get(k), f"{where}.{k}" if where else k)
+                        for k, v in new.items()}
+            if isinstance(new, list) and isinstance(old, list) and len(new) == len(old):
+                return [walk(v, o, f"{where}[{i}]") for i, (v, o) in enumerate(zip(new, old))]
+            if self._foreign_path(new) and isinstance(old, str) and self.image_id(old) is not None:
+                fixed.append(where)
+                return old
+            return new
+
+        props = walk(pushed["props"], row["props"], "")
+        if not fixed:
+            return pushed
+        kept.setdefault(pushed["id"], []).extend(f"props.{w}" for w in fixed)
+        return {**pushed, "props": props}

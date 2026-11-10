@@ -151,6 +151,34 @@ def test_put_records_keeps_the_labs_placement_against_a_stale_copy(lab):
     assert st.get_sample("chip_new")["location"] == "slot_9"
 
 
+def test_put_records_keeps_the_labs_picture_paths_against_brain_local_ones(lab, tmp_path):
+    side, _, records, _ = lab
+    st = side.store
+    pic = records.image_dir / "chip_h" / "flake_1_20x.png"
+    pic.parent.mkdir(parents=True, exist_ok=True)
+    pic.write_bytes(b"png")
+    chain = {"image": {"path": str(pic), "sha256": "ab"},
+             "masks": [{"path": str(pic), "sha256": "ab"}]}
+    st.upsert_sample("flake_h", "flake", location="chip_h",
+                     props={"optical_geometry": {"recognition_chain": chain}, "image": str(pic)})
+    brain = str(tmp_path / "brain" / "images" / "chip_h" / "flake_1_20x.png")
+    row = st.get_sample("flake_h")
+    row["props"]["optical_geometry"]["recognition_chain"]["image"]["path"] = brain
+    row["props"]["optical_geometry"]["recognition_chain"]["masks"][0]["path"] = brain
+    row["props"]["image"] = brain
+    row["props"]["note"] = "brain edit"
+    receipt = records.put({"samples": [row]})
+    now = st.get_sample("flake_h")["props"]
+    assert now["optical_geometry"]["recognition_chain"] == chain
+    assert now["image"] == str(pic) and now["note"] == "brain edit"
+    assert sorted(receipt["placement_kept"]["flake_h"]) == sorted([
+        "props.optical_geometry.recognition_chain.image.path",
+        "props.optical_geometry.recognition_chain.masks[0].path", "props.image"])
+    # an id sent back properly is the lab's path again; nothing to keep
+    row = records.scrub(st.get_sample("flake_h"))
+    assert records.put({"samples": [row]})["placement_kept"] == {}
+
+
 def test_images_are_ids_in_rows_and_served_with_meta(lab):
     side, _, records, clients = lab
     c = clients["stacking"]

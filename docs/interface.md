@@ -77,8 +77,13 @@ that sample has held:
 
 `"placement_from_brain": true` on a sample row takes its placement as given (e.g. a chip
 carried back by hand to where it was before). The other fields of the row are always taken.
+Picture paths get the same protection: a string in a pushed sample's props that is an
+absolute path outside the lab's picture folders (the brain's local copy, sent without
+turning it back into `"qumus-image:<id>"`) keeps the lab's own path at the same place in
+the row.
+
 The command result carries `"placement_kept": {sample_id: [field, ...]}` for what the lab
-kept.
+kept (picture paths as `props.<where>`).
 
 ## Jobs
 
