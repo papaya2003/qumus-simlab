@@ -121,10 +121,11 @@ class SimReactorConsole:
 
     # ------------------------------------------------------------------ basics
     def _event(self, service: str, message: str, level: str = "info") -> None:
-        self.seq += 1
-        self.events.append({"seq": self.seq, "service": service, "level": level,
-                            "message": message, "ts": self.wall()})
-        del self.events[:-500]
+        # like the real console: seq counts per service, ts_unix orders, newest first
+        seq = 1 + max((e["seq"] for e in self.events if e["service"] == service), default=0)
+        self.events.insert(0, {"seq": seq, "service": service, "level": level,
+                               "message": message, "ts_unix": self.wall()})
+        del self.events[500:]
 
     def _next_id(self) -> str:
         self.seq += 1
@@ -239,21 +240,27 @@ class SimReactorConsole:
                 base.update(busy=f["running"] or f["phase"] == "cooling", pv_c=round(f["pv"], 2),
                             target_c=f["sv"], pv=round(f["pv"], 2), sv=f["sv"],
                             control_mode=f["mode"], flow_pct=list(f["gas"]),
+                            flow={"connected": True, "gas_channels": [
+                                {"channel_index": i, "channel_number": i + 1, "available": True,
+                                 "target_percent": g} for i, g in enumerate(f["gas"])]},
                             sequence={"running": f["running"], "steps": f["steps"],
                                       "current_index": f["index"], "phase": f["phase"],
                                       "hold_remaining_seconds": remaining,
                                       "end_gas": f["end_gas"],
                                       "end_gas_until_c": f["end_gas_until_c"]})
             elif device == "thermal":
-                base["regions"] = {"crucible": {"max_c": round(f["pv"], 2)}}
+                base.update(state="streaming", fps=25.0)
             elif device == "stage":
                 inside = self.crucible is not None
-                base["automation"] = {"at_poses": {"furnace": {"matched": inside},
+                base["automation"] = {"configured": True, "error": None, "poses": ["load", "furnace"],
+                                      "at_poses": {"furnace": {"matched": inside},
                                                    "load": {"matched": not inside}}}
             elif device == "robot":
-                base["vacuum"] = {"held": None}
+                base.update(vacuum={"held": None}, enabled=True)
+            elif device == "vision":
+                base["calibrated_cameras"] = [4]
             elif device == "microscope":
-                base["snapshots"] = self.snapshots
+                base.update(snapshots=self.snapshots, cameras={"microscope": True, "side": False})
             run = self.active_run
             if run and not run["closed"] and device in run["devices"]:
                 base["busy"] = True
@@ -265,9 +272,17 @@ class SimReactorConsole:
     def overview(self, page: str | None) -> dict[str, Any]:
         with self.lock:
             run = self.active_run
+            active = run is not None and not run["closed"]
+            services = [{"id": d, "label": d.capitalize(), "connected": True, "configured": True,
+                         "demo": True, "busy": False, "fault": None, "error": None, "phase": "ready",
+                         "locked": False, "lease_holder": None}
+                        for d in ("robot", "stage", "thermal", "vision", "furnace", "microscope")]
             return {"console": {"commit": "qumus-simlab", "demo": True},
                     "control": self.control_list(page),
-                    "run": dict(run) if run and not run["closed"] else None}
+                    "orchestrator": {"connected": True, "busy": active, "demo": True,
+                                     "lease": {"holder": self.orchestrator_holder}},
+                    "services": services,
+                    "run": dict(run) if active else None}
 
     def world(self) -> dict[str, Any]:
         with self.lock:
