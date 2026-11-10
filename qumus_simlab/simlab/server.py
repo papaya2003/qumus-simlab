@@ -400,6 +400,12 @@ def _memory_watch(folder: Path) -> None:
 
 
 def main(args: Any) -> None:
+    import faulthandler
+    import signal
+
+    faulthandler.enable()
+    if hasattr(signal, "SIGUSR1"):  # `kill -USR1 <pid>`: every thread's stack to stderr
+        faulthandler.register(signal.SIGUSR1, all_threads=True)
     _memory_watch(Path(args.db).resolve().parent)
     side = build_side(args.db, args.seed, getattr(args, "target_bundle", None),
                       getattr(args, "resume", None), tuple(getattr(args, "accept_changed", ())))
