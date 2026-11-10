@@ -102,6 +102,8 @@ CREATE TRIGGER IF NOT EXISTS ph_sample_u AFTER UPDATE ON sample
 TABLES = ("sample", "reservation", "run", "step", "event")
 IMAGE_PREFIX = "qumus-image:"
 MAX_PAGE = 2000
+#: run.meta values larger than this stay in the lab (see _run_for_feed)
+FEED_META_VALUE_MAX = 64 * 1024
 
 
 def install_change_log(store: Any) -> None:
@@ -275,12 +277,36 @@ class LabRecords:
         return {"changes": out, "next": rows[-1]["seq"] if rows else int(since),
                 "head": int(head["m"] or 0), "lab_id": self.lab_id}
 
+    def _run_for_feed(self, run_id: str) -> dict[str, Any] | None:
+        """The run row without its large flow-internal meta values.
+
+        Flows keep megabytes of working state in run.meta (a search's checkpoint,
+        a transfer's normal_transfer record) and rewrite it every frame. The brain
+        reads only small meta keys (purpose, target, workflow, review), so values
+        over FEED_META_VALUE_MAX bytes stay in the lab; their keys are listed
+        under meta["omitted_from_feed"]. SQLite drops them before Python parses."""
+        st = self.store
+        r = st._x("SELECT * FROM run WHERE id = ?", (run_id,)).fetchone()
+        if r is None:
+            return None
+        row = dict(r)
+        meta = row.get("meta_json")
+        if meta and len(meta) > FEED_META_VALUE_MAX:
+            big = [k for (k,) in st._x("SELECT key FROM json_each(?) WHERE length(CAST(value AS TEXT)) > ?",
+                                        (meta, FEED_META_VALUE_MAX)).fetchall()]
+            if big:
+                paths = ['$."' + str(k).replace('"', '\\"') + '"' for k in big]
+                stripped = st._x(f"SELECT json_remove(?, {', '.join('?' * len(paths))})",
+                                 (meta, *paths)).fetchone()[0]
+                row["meta_json"] = json.dumps({**json.loads(stripped), "omitted_from_feed": big})
+        return st._run_row(row)
+
     def _row(self, table: str, key: str) -> dict[str, Any] | None:
         st = self.store
         if table == "sample":
             return st.get_sample(key)
         if table == "run":
-            return st.get_run(key)
+            return self._run_for_feed(key)
         if table == "reservation":
             kind, _, k = key.partition(":")
             r = st._x("SELECT * FROM reservation WHERE kind = ? AND key = ?", (kind, k)).fetchone()

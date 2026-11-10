@@ -23,6 +23,7 @@ the existing SafetyGate. A device that does not answer during a motion command
 
 from __future__ import annotations
 
+import os
 import threading
 from collections.abc import Callable
 from typing import Any
@@ -137,6 +138,12 @@ class SimModule:
         self.flows = tuple(f for f, m in FLOW_MODULE.items() if m == module)
         self._timers: dict[str, threading.Timer] = {}
         kwargs: dict[str, Any] = {} if wall is None else {"wall": wall}
+        # a busy simulation can delay the heartbeat reply past the 3 s contract
+        # lease; QUMUS_SIMLAB_LEASE_S lengthens it for the SIM lab only
+        try:
+            kwargs["lease_s"] = max(3.0, float(os.environ.get("QUMUS_SIMLAB_LEASE_S", "") or 3.0))
+        except ValueError:
+            pass
         self.service = ContractService(
             f"qumus-sim-{module}", module, self._actions(),
             devices={d: {"kind": _kind(self.lab.devices.get(d)),

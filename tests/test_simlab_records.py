@@ -301,3 +301,14 @@ def test_save_point_and_resume_keep_the_lab_and_its_picture_ids(tmp_path):
     for m in mods2.values():
         m.service.close()
     side2.jobs.shutdown(10)
+
+
+def test_feed_leaves_large_run_meta_in_the_lab():
+    from qumus_simlab.runtime.store import RunStore
+    from qumus_simlab.simlab.records import LabRecords
+
+    st = RunStore(":memory:")
+    rid = st.create_run("stack_device", {})
+    st.update_run_meta(rid, purpose="explore", normal_transfer={"frames": "x" * 100_000}, done=True)
+    meta = LabRecords(st, None)._run_for_feed(rid)["meta"]
+    assert meta == {"purpose": "explore", "done": True, "omitted_from_feed": ["normal_transfer"]}
