@@ -261,12 +261,18 @@ class LabRecords:
         limit = min(max(1, int(limit)), MAX_PAGE)
         rows = self.store._x("SELECT seq, tbl, key FROM change_log WHERE seq > ? "
                              "ORDER BY seq LIMIT ?", (int(since), limit)).fetchall()
+        # Every entry carries the row as it is NOW, so of several changes to one row
+        # in a page only the last is sent (a stamp or chip rewritten every frame
+        # during a transfer otherwise sends hundreds of copies of the same row).
+        last = {(r["tbl"], r["key"]): r["seq"] for r in rows}
         out = []
         for r in rows:
+            if last[(r["tbl"], r["key"])] != r["seq"]:
+                continue
             out.append({"seq": r["seq"], "table": r["tbl"], "key": r["key"],
                         "row": self.scrub(self._row(r["tbl"], r["key"]))})
         head = self.store._x("SELECT MAX(seq) AS m FROM change_log").fetchone()
-        return {"changes": out, "next": out[-1]["seq"] if out else int(since),
+        return {"changes": out, "next": rows[-1]["seq"] if rows else int(since),
                 "head": int(head["m"] or 0), "lab_id": self.lab_id}
 
     def _row(self, table: str, key: str) -> dict[str, Any] | None:
