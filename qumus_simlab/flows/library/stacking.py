@@ -76,6 +76,7 @@ from qumus_simlab.records.device_design import (
     DeviceDesignV1,
     build_design_pose_window_admission,
     design_anchor_mm,
+    portable,
     target_import_binding,
     validate_design_artifact,
     validate_design_current,
@@ -6093,6 +6094,10 @@ class StackDeviceFlow(Flow):
         p.home_slots[p.target_chip_id] = target_slot
         if p.device_design:
             design = validate_design_current(store, p.device_design.project_id, p.device_design)
+            # Run on the lab's own saved copy: equal to the caller's up to portable() (checked
+            # just above), but its file paths name this lab's pictures and design files.
+            saved = (store.get_project(p.device_design.project_id) or {}).get("state", {}).get("device_design")
+            design = p.device_design = DeviceDesignV1.model_validate(saved)
             admission = build_design_pose_window_admission(design)
             if p.design_pose_window_admission is not None and p.design_pose_window_admission != admission:
                 raise ValueError("Caller pose-window admission differs from the freshly recomputed design screen")
@@ -6117,7 +6122,7 @@ class StackDeviceFlow(Flow):
             if p.design_shifts_mm and p.design_shifts_mm != shifts:
                 raise ValueError("Caller source shifts differ from the accepted design")
             p.design_shifts_mm, p.design_rotations_deg = shifts, rotations
-            if p.design_path is not None and p.design_path != design.artifact.path:
+            if p.design_path is not None and portable(p.design_path) != portable(design.artifact.path):
                 raise ValueError("Caller artifact path differs from the accepted design")
             p.design_path = design.artifact.path
             optical = _contact_classification_snapshot(store, design)
