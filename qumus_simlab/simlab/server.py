@@ -264,8 +264,17 @@ class SimLabServer:
         self.reactor_console = SimReactorConsole()
         lab_routes = console_routes(self.reactor_console)
 
-        def reactor_extra(app: Any, loopback: Any) -> None:
+        # contract 2 (lab-contract spec/contract-2.md) next to v1: one station, every port
+        from qumus_simlab.simlab.contract2 import Station
+
+        self.station = Station({m: (mod.service, mod) for m, mod in self.modules.items()})
+
+        def window_extra(app: Any, loopback: Any) -> None:
             extra(app, loopback)
+            self.station.routes(app, loopback)
+
+        def reactor_extra(app: Any, loopback: Any) -> None:
+            window_extra(app, loopback)
             lab_routes(app, loopback)
 
         listeners = [(m, self.host, self.ports[m], None) for m in self.modules]
@@ -276,7 +285,7 @@ class SimLabServer:
         for module, host, port, loop_hosts in listeners:
             mod = self.modules[module]
             kwargs = {} if loop_hosts is None else {"loopback_hosts": loop_hosts}
-            add = reactor_extra if module == "reactor" else extra
+            add = reactor_extra if module == "reactor" else window_extra
             config = uvicorn.Config(create_app(mod.service, extra=add, **kwargs), host=host,
                                     port=port, log_level="warning",
                                     access_log=False, lifespan="off")

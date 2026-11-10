@@ -8,6 +8,30 @@ Every window (8781 exfoliation, 8782 stacking, 8783 reactor) serves all of this;
 windows share one simulated table, so `/api/records` and `/api/sim/*` answer the same on
 each. The agent reads them from stacking (8782).
 
+## Contract 2 (next to v1)
+
+Contract 2 (papaya2003/lab-contract `spec/contract-2.md`, decision 0008) is served next to the
+v1 routes by `qumus_simlab/simlab/contract2.py`. The sim lab is **one station**: every port
+(8781-8783 and the remote listeners 28781-28783) answers the same entry.
+
+| Route | Meaning |
+|---|---|
+| `GET /api/station` | entry: services `exfoliation/`, `stacking/`, `reactor/`, `boot_id` |
+| `GET /<window>/api/describe` | command specs (units, `deadline_s`, `lease`, `hazard`, ...), `lease.duration_s` |
+| `GET /<window>/api/state` | flat state; devices and jobs under `readings` |
+| `GET /<window>/api/events?since=&limit=` | events with `kind` |
+| `POST`/`DELETE /<window>/api/lease` | take or renew (`renew_only: true`) / release |
+| `POST /<window>/api/command` | `{command_id, action, params, deadline_s?}`; 202, duplicate, `id_reused` |
+| `GET /<window>/api/commands/<id>` | command record (last 500 of this boot) |
+| `GET /<window>/api/jobs/<run_id>` | jobs profile |
+| `POST /<window>/api/stop` | any client, no lease |
+
+Header `X-Lab-Client`; errors are `{"error": {code, message, retry}}`. The v1 routes below stay
+until the brain has moved. The contract 2 `records` profile (brain-issued sample ids) is not
+offered yet; records stay on the v1 feed. Check a running sim lab with lab-contract's
+`python -m conformance --demo http://127.0.0.1:8782/`; the test
+`tests/test_simlab_contract2.py` runs the same check when `LAB_CONTRACT=<lab-contract checkout>`.
+
 ## Ownership
 
 - Sim lab owns: the simulated world, runs/steps of jobs, samples it creates or moves,
