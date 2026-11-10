@@ -344,6 +344,10 @@ def build_side(db: str | Path, seed: int | None, target_bundle: str | Path | Non
         bundle = Path(target_bundle).resolve()
         load_imported_hallbar_target(bundle, workspace=db.parent)
         config = with_hallbar_target(config, target=load_imported_hallbar_target(bundle))
+    if saved:
+        from qumus_simlab.testbench import render
+
+        render.NUMBER_FLOOR = render.highest_picture_number(saved.get("image_roots") or ())
     side = build_lab_side(db, seed=seed, testbench_config=config,
                           state_path=saved.get("state_path"))
     if saved:
