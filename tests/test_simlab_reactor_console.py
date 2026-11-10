@@ -152,3 +152,28 @@ def test_motion_stop_holds_a_run_and_abort_closes_it(lab):
     active = client.get("/lab/api/state").json()["active_run"]
     assert active["status"] == "aborted" and active["closed"]
     assert sim.slots["A1"] == "c1"  # the chip did not move
+
+
+def test_shapes_follow_the_real_console(lab):
+    """Field shapes read from the real reactor console (read-only check, 11-10)."""
+    sim, client = lab
+    over = client.get("/lab/api/console/state").json()
+    assert {row["id"] for row in over["services"]} == {"robot", "stage", "thermal", "vision",
+                                                       "furnace", "microscope"}
+    assert all(row["connected"] is True and row["phase"] == "ready" for row in over["services"])
+    assert over["orchestrator"]["connected"] is True and over["orchestrator"]["lease"]["holder"] is None
+    furnace = client.get("/lab/api/console/state/furnace").json()["state"]
+    assert furnace["flow"]["connected"] is True and len(furnace["flow"]["gas_channels"]) == 3
+    stage = client.get("/lab/api/console/state/stage").json()["state"]
+    assert stage["automation"]["configured"] is True
+    assert client.get("/lab/api/console/state/vision").json()["state"]["calibrated_cameras"]
+    assert client.get("/lab/api/console/state/microscope").json()["state"]["cameras"]["microscope"]
+    thermal = client.get("/lab/api/console/state/thermal").json()["state"]
+    assert thermal["state"] == "streaming" and "regions" not in thermal
+    take(client, "robot")
+    client.post("/lab/api/console/stop/robot", json={}, headers=H)
+    events = client.get("/lab/api/console/events").json()["events"]
+    assert events and all("ts_unix" in e for e in events)
+    assert [e["ts_unix"] for e in events] == sorted((e["ts_unix"] for e in events), reverse=True)
+    per_service = [e["seq"] for e in events if e["service"] == "robot"]
+    assert per_service == sorted(per_service, reverse=True) and min(per_service) == 1
