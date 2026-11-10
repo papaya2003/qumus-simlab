@@ -264,3 +264,31 @@ def test_flow_action_queues_a_job_and_blocks_single_motion(lab):
     with pytest.raises(CommandRefused) as e:  # job controls stay with the owner module
         mods["exfoliation"].service.command("agent", {"action": "job_cancel", "run_id": rid})
     assert e.value.status == 422
+
+
+def test_heartbeat_is_not_held_up_by_a_slow_job_lookup():
+    import threading
+
+    from qumus_simlab.simlab.service import ContractService
+
+    def slow_jobs():
+        time.sleep(1.0)
+        return []
+
+    svc = ContractService("s", "stacking", [], active_jobs=slow_jobs)
+    t = threading.Thread(target=svc.state)
+    t.start()
+    time.sleep(0.1)
+    t0 = time.monotonic()
+    svc.heartbeat("agent")
+    assert time.monotonic() - t0 < 0.5
+    t.join()
+    svc.close()
+
+
+def test_run_statuses_skip_run_meta(lab):
+    side, mods, _ = lab
+    rid = side.store.create_run("stacking_flow_demo", {"big": "x" * 1000})
+    rows = side.store.run_statuses()
+    assert {"id": rid, "project_id": None, "flow": "stacking_flow_demo", "status": "queued"} in rows
+    assert all(set(r) == {"id", "project_id", "flow", "status"} for r in rows)

@@ -120,7 +120,7 @@ def _backup_sqlite(src: sqlite3.Connection, dst_path: Path) -> None:
 
 
 def open_jobs(store: Any) -> list[str]:
-    return [r["id"] for r in store.list_runs() if r["status"] in OPEN_JOB]
+    return [r["id"] for r in store.run_statuses() if r["status"] in OPEN_JOB]
 
 
 def save_checkpoint(services: Any, dest: Path, *, label: str = "", extra: dict[str, Any] | None = None

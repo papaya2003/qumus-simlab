@@ -749,7 +749,7 @@ class ThreadJobService:
                 raise ValueError("The current hold has an unknown failure record")
             if unconfirmed_energy_shutdown(run) or _unsafe_review_state((run["error"], run["result"], run["meta"])):
                 raise ValueError("Dangerous, unconfirmed shutdown or pending transfer state cannot be released by review")
-            if any(r["status"] in ("queued", "running") for r in self.store.list_runs()):
+            if any(r["status"] in ("queued", "running") for r in self.store.run_statuses()):
                 raise ValueError("Finish active laboratory jobs before reviewing a hold")
             flow, _, steps = build_run_steps(run, self.bench, store=self.store)
             seq = first_unfinished(self.store, run_id)

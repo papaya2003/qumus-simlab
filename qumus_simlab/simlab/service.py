@@ -197,12 +197,14 @@ class ContractService:
         except Exception as e:  # noqa: BLE001 - a state read never fails the page
             devices, connected = {}, False
             self.fault = self.fault or f"device read failed: {e}"
+        # job lookups read the lab store: keep them outside the lock heartbeats need
+        jobs = list(self._active_jobs())
         with self._lock:
             return {"service": self.service, "module": self.module, "seq": self._seq,
                     "ts_unix": self.wall(), "demo": self.demo, "connected": connected,
-                    "busy": self.busy(), "locked": self.locked, "fault": self.fault,
-                    "lease": self._lease_view(), "last_command": self.last_command,
-                    "jobs": list(self._active_jobs()), "devices": devices}
+                    "busy": self._motion_running() or bool(jobs), "locked": self.locked,
+                    "fault": self.fault, "lease": self._lease_view(),
+                    "last_command": self.last_command, "jobs": jobs, "devices": devices}
 
     # -- lease ----------------------------------------------------------------
     def _lease_valid(self) -> _Lease | None:
@@ -374,8 +376,9 @@ class ContractService:
 
     def _state_light(self) -> dict[str, Any]:
         """State without device reads (fast; for command replies)."""
+        busy = self.busy()
         with self._lock:
-            return {"service": self.service, "seq": self._seq, "busy": self.busy(),
+            return {"service": self.service, "seq": self._seq, "busy": busy,
                     "locked": self.locked, "fault": self.fault, "lease": self._lease_view(),
                     "last_command": self.last_command}
 

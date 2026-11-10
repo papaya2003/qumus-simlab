@@ -198,7 +198,7 @@ class SimModule:
         return {d: self.read_device(d) for d in self.device_ids}
 
     def active_jobs(self) -> list[str]:
-        return [r["id"] for r in self.store.list_runs()
+        return [r["id"] for r in self.store.run_statuses()
                 if r["flow"] in self.flows and r["status"] in ACTIVE]
 
     def on_stop(self) -> bool:

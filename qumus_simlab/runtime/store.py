@@ -583,6 +583,12 @@ class RunStore:
             rows = self._x("SELECT * FROM run ORDER BY created_at")
         return [self._run_row(r) for r in rows.fetchall()]
 
+    def run_statuses(self) -> list[dict[str, Any]]:
+        """id, project, flow and status of every run, without parsing params/meta
+        (a search run's meta is megabytes; busy checks only need the status)."""
+        rows = self._x("SELECT id, project_id, flow, status FROM run ORDER BY created_at")
+        return [dict(r) for r in rows.fetchall()]
+
     @staticmethod
     def _run_row(r: sqlite3.Row) -> dict[str, Any]:
         return {"id": r["id"], "project_id": r["project_id"], "flow": r["flow"],
