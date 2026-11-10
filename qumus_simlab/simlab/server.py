@@ -25,6 +25,7 @@ The agent only needs the URL of each window (its stations.yaml).
 from __future__ import annotations
 
 import socket
+import sys
 import threading
 import time
 from pathlib import Path
@@ -355,7 +356,49 @@ def build_side(db: str | Path, seed: int | None, target_bundle: str | Path | Non
     return side
 
 
+MEMWATCH_EVERY_S = 120.0
+
+
+def _memory_watch(folder: Path) -> None:
+    """QUMUS_SIMLAB_MEMWATCH=<GB>: once the process holds more than that, write the
+    largest Python allocation sites (tracemalloc) to <db folder>/memwatch-*.txt every
+    2 minutes. Diagnosis only; off by default (tracemalloc slows the lab)."""
+    import os
+    import resource
+    import threading
+    import tracemalloc
+
+    try:
+        limit_gb = float(os.environ.get("QUMUS_SIMLAB_MEMWATCH", "") or 0)
+    except ValueError:
+        return
+    if limit_gb <= 0:
+        return
+    tracemalloc.start(12)
+
+    def rss_gb() -> float:
+        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return peak / 2**30 if sys.platform == "darwin" else peak / 2**20
+
+    def loop() -> None:
+        while True:
+            time.sleep(MEMWATCH_EVERY_S)
+            current, peak = tracemalloc.get_traced_memory()
+            if current / 2**30 < limit_gb and rss_gb() < limit_gb:
+                continue
+            snap = tracemalloc.take_snapshot()
+            lines = [f"{time.strftime('%H:%M:%S')} traced {current/2**30:.2f} GB, peak {peak/2**30:.2f} GB, "
+                     f"max rss {rss_gb():.2f} GB"]
+            for stat in snap.statistics("traceback")[:15]:
+                lines.append(f"\n{stat.size/2**20:.1f} MB in {stat.count} blocks")
+                lines += [f"    {line}" for line in stat.traceback.format()[-12:]]
+            (folder / f"memwatch-{time.strftime('%H%M%S')}.txt").write_text("\n".join(lines))
+
+    threading.Thread(target=loop, name="qumus-simlab-memwatch", daemon=True).start()
+
+
 def main(args: Any) -> None:
+    _memory_watch(Path(args.db).resolve().parent)
     side = build_side(args.db, args.seed, getattr(args, "target_bundle", None),
                       getattr(args, "resume", None), tuple(getattr(args, "accept_changed", ())))
     remote = {}
