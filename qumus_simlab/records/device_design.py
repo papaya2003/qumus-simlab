@@ -972,7 +972,7 @@ def build_design_spec(store, project_id: str, placements: list[FlakePlacement],
     if len(selected) != 2 or sorted(p.flake_id for p in placements) != sorted(selected):
         raise ValueError("design must use exactly the current two selected flakes")
     snapshot = selection_source_snapshot(store, selected)
-    if state.get("selection_source_evidence") != snapshot:
+    if portable(state.get("selection_source_evidence")) != portable(snapshot):
         raise ValueError("selected source evidence changed or was not bound by Picker")
     chip = store.get_sample(plan.get("target_chip_id", ""))
     if not chip or chip["kind"] != "chip":
@@ -996,7 +996,7 @@ def build_design_spec(store, project_id: str, placements: list[FlakePlacement],
     verification = load_yaml("verification.yaml")
     return DeviceDesignSpec(design_id=design_id, project_id=project_id, revision=revision,
         bench=store.bench, target_chip_id=chip["id"], target=target,
-        guidance_sha256=geometry_digest(plan), selection_sha256=geometry_digest(snapshot),
+        guidance_sha256=geometry_digest(portable(plan)), selection_sha256=geometry_digest(portable(snapshot)),
         sources=sources, pickup_order=tuple(s.flake_id for s in sources), contact_overlap_um=contact_overlap_um,
         overlap_rule=FULL_CONTACT_POLICY if isinstance(target, ImportedHallBarTarget) else LEGACY_CONTACT_POLICY,
         pose_tolerance=DesignPoseTolerance(translation_um=verification["refind_flake"]["centre_tolerance_um"],
