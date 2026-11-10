@@ -256,6 +256,17 @@ class SimLabServer:
         import uvicorn
 
         extra = sim_routes(self.side, self.records, self.info)
+        # the reactor window also speaks the real reactor's Lab Console API under /lab/
+        # (reactor_console.py); one simulated reactor for its normal and remote listener
+        from qumus_simlab.simlab.reactor_console import SimReactorConsole, console_routes
+
+        self.reactor_console = SimReactorConsole()
+        lab_routes = console_routes(self.reactor_console)
+
+        def reactor_extra(app: Any, loopback: Any) -> None:
+            extra(app, loopback)
+            lab_routes(app, loopback)
+
         listeners = [(m, self.host, self.ports[m], None) for m in self.modules]
         listeners += [(m, "127.0.0.1", p, frozenset()) for m, p in self.remote_ports.items()
                       if m in self.modules]
@@ -264,7 +275,8 @@ class SimLabServer:
         for module, host, port, loop_hosts in listeners:
             mod = self.modules[module]
             kwargs = {} if loop_hosts is None else {"loopback_hosts": loop_hosts}
-            config = uvicorn.Config(create_app(mod.service, extra=extra, **kwargs), host=host,
+            add = reactor_extra if module == "reactor" else extra
+            config = uvicorn.Config(create_app(mod.service, extra=add, **kwargs), host=host,
                                     port=port, log_level="warning",
                                     access_log=False, lifespan="off")
             server = uvicorn.Server(config)
@@ -356,6 +368,8 @@ def main(args: Any) -> None:
                           remote_ports=remote, info=getattr(side, "info", None)).start()
     for module, url in server.urls.items():
         print(f"{module:12s} {url}api/describe", flush=True)
+        if module == "reactor":
+            print(f"{'':12s} {url}lab/  (reactor Lab Console API)", flush=True)
     for module, port in remote.items():
         print(f"{module:12s} http://127.0.0.1:{port}/  (remote: SSH tunnel endpoint)", flush=True)
     print(f"Simulated lab (demo: true), Hall-bar bench, seed {side.info['seed']}, "
