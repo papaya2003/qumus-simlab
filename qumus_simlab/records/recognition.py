@@ -296,6 +296,29 @@ def validate_rgb_outline(observation: dict, *, material: str) -> None:
         raise ValueError("Missing or malformed RGB outline binding") from exc
 
 
+def _without_paths(value):
+    if isinstance(value, dict):
+        return {k: _without_paths(v) for k, v in value.items() if k != "path"}
+    if isinstance(value, list):
+        return [_without_paths(v) for v in value]
+    return value
+
+
+def _adopt_receipt_paths(observation: dict, chain) -> None:
+    """Use the receipt's own file paths when only the paths differ.
+
+    A record that went to the brain and back (put_records) can carry the
+    brain's copy of each picture; the sha256 of every file still binds it, so
+    the lab checks its own files instead of failing on the folder name."""
+    current = observation.get("recognition_chain")
+    if (not isinstance(chain, dict) or not isinstance(current, dict) or current == chain
+            or _without_paths(current) != _without_paths(chain)):
+        return
+    observation["recognition_chain"] = chain
+    if isinstance(chain.get("image"), dict) and "path" in chain["image"]:
+        observation["image"] = chain["image"]["path"]
+
+
 def validate_rgb_capture_binding(store, flake: dict, observation: dict) -> None:
     """Join mutable inventory to its original flow-produced capture receipt."""
     try:
@@ -314,6 +337,7 @@ def validate_rgb_capture_binding(store, flake: dict, observation: dict) -> None:
                 or completion["id"] is None or event_id >= completion["id"]):
             raise ValueError("RGB capture receipt is foreign, missing or later than job completion")
         receipt = json.loads(event["payload_json"])
+        _adopt_receipt_paths(observation, receipt.get("recognition_chain"))
         if (type(receipt.get("version")) is not int or receipt.get("version") != 1 or receipt.get("flake_id") != flake["id"]
                 or receipt.get("source_chip_id") != flake["location"]
                 or receipt.get("material") != flake["props"].get("material")
