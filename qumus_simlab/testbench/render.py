@@ -401,26 +401,6 @@ def _pixel_key(meta: dict[str, Any]) -> str:
     return hashlib.sha256(blob.encode()).hexdigest()
 
 
-#: a resumed lab starts numbering after every picture of the runs it continues
-#: (simlab/server.py sets it from the save point's image roots): a reused name
-#: would make the brain keep an older picture under the same name
-NUMBER_FLOOR = 0
-
-
-def highest_picture_number(roots: Any) -> int:
-    """Largest <prefix>_<n> number of any picture under these folders."""
-    best = 0
-    for root in roots:
-        root = Path(root)
-        if not root.is_dir():
-            continue
-        for p in root.rglob("*_*.*"):
-            tail = p.stem.rsplit("_", 1)[-1]
-            if tail.isdigit() and p.is_file():
-                best = max(best, int(tail))
-    return best
-
-
 class _Writer:
     """Numbered image files in one directory, thread-safe."""
 
@@ -431,7 +411,7 @@ class _Writer:
         # sessions in the same store.
         last = max((int(p.stem.rsplit('_', 1)[-1]) for p in self.dir.iterdir()
                     if p.is_file() and p.stem.rsplit('_', 1)[-1].isdigit()), default=0)
-        self._n = itertools.count(max(last, NUMBER_FLOOR) + 1)
+        self._n = itertools.count(last + 1)
         self._lock = threading.Lock()
         self._last: dict[str, tuple[bytes, str]] = {}  # prefix -> (digest, numbered path)
 

@@ -344,20 +344,51 @@ def build_side(db: str | Path, seed: int | None, target_bundle: str | Path | Non
         bundle = Path(target_bundle).resolve()
         load_imported_hallbar_target(bundle, workspace=db.parent)
         config = with_hallbar_target(config, target=load_imported_hallbar_target(bundle))
-    if saved:
-        from qumus_simlab.testbench import render
-
-        render.NUMBER_FLOOR = render.highest_picture_number(saved.get("image_roots") or ())
     side = build_lab_side(db, seed=seed, testbench_config=config,
                           state_path=saved.get("state_path"))
     if saved:
         side.image_roots = tuple(Path(r) for r in saved.get("image_roots") or ())
+        number_pictures_after(side.image_roots)
         side.store.emit("notification", {"level": "info", "text": (
             f"Sim lab resumed from save point {saved['resumed']['checkpoint']} (lab event "
             f"{saved['last_event_id']}, code {saved.get('git_commit')}).")})
     side.info = {"seed": seed, "target_bundle": str(Path(target_bundle).resolve())
                  if target_bundle else None, "resumed": saved.get("resumed")}
     return side
+
+
+def highest_picture_number(roots: Any) -> int:
+    """Largest <prefix>_<n> number of any picture under these folders."""
+    best = 0
+    for root in roots:
+        root = Path(root)
+        if not root.is_dir():
+            continue
+        for p in root.rglob("*_*.*"):
+            tail = p.stem.rsplit("_", 1)[-1]
+            if tail.isdigit() and p.is_file():
+                best = max(best, int(tail))
+    return best
+
+
+def number_pictures_after(roots: Any) -> int:
+    """A resumed lab writes into a new folder; without this its picture numbers
+    restart at 1 and reuse names of the runs it continues, and the brain (which
+    keeps pictures by name) would keep the older picture. Every picture writer
+    of this process continues after the highest earlier number. (Done here, not
+    in testbench/render.py, so save points that guard render.py stay valid.)"""
+    import gc
+    import itertools
+
+    from qumus_simlab.testbench.render import _Writer
+
+    floor = highest_picture_number(roots)
+    for obj in gc.get_objects():
+        if isinstance(obj, _Writer):
+            with obj._lock:
+                nxt = next(obj._n)
+                obj._n = itertools.count(max(nxt, floor + 1))
+    return floor
 
 
 MEMWATCH_EVERY_S = 120.0
