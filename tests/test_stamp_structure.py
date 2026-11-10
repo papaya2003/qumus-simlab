@@ -230,7 +230,7 @@ def test_clock_driven_keyframes_keep_failed_pickup_and_replay_exact_pixels(tmp_p
         "structure_profile": STAMP_STRUCTURE_PROFILE,
         "limitation": "Diamond aperture has synthetic 5 mm inradius and exceeds centred 5x FOV; clear field does not establish centre.",
         "frames": frames}
-    (output / "keyframes.json").write_text(json.dumps(manifest, indent=2))
+    (output / "keyframes.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     sheet = Image.new("RGB", (1020, 1100), "#f4f5f7")
     draw, font = ImageDraw.Draw(sheet), ImageFont.load_default(size=13)
     draw.text((12, 10), "Synthetic stamp optics | actual Clock/device states | failed pickup retained", fill="#172338", font=font)

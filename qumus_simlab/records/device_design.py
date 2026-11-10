@@ -1021,7 +1021,7 @@ def validate_imported_target_files(store, target: ImportedHallBarTarget) -> Path
         raise ValueError("Imported target source escaped its generated directory")
     if hashlib.sha256(path.read_bytes()).hexdigest() != target.import_receipt.source_sha256:
         raise ValueError("Original imported GDS bytes changed")
-    if parse_hallbar_target(json.loads(definition.read_text())) != target:
+    if parse_hallbar_target(json.loads(definition.read_text(encoding="utf-8"))) != target:
         raise ValueError("Immutable imported target definition changed")
     return path
 

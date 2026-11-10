@@ -113,3 +113,12 @@ carried over. Package `qumus_simlab`.
 
 Lab-private: Sanfeng Wu lab, Princeton. Never commit API keys, `.env`, lab data, GDS files
 or target bundles.
+
+## Windows
+
+Runs on Windows 10/11 with Python 3.11+ the same way, with `.venv\Scripts\python.exe`
+in place of `.venv/bin/python`. Every text file is read and written as UTF-8
+(`tests/test_windows_portability.py`, ruff PLW1514), because the Windows default is
+the locale code page (GBK). `QUMUS_SIMLAB_MEMWATCH` is POSIX-only and ignored on
+Windows. qumus-agent's `scripts/check_platform.py` checks the brain and this lab
+together on a new computer.

@@ -160,7 +160,7 @@ def save_checkpoint(services: Any, dest: Path, *, label: str = "", extra: dict[s
             "saved_at": time.strftime("%Y-%m-%d %H:%M:%S %Z"), "git_commit": _git_commit(),
             "agents": getattr(getattr(services, "runtime", None), "mode", None),
             "guarded": guarded_fingerprint(), **(extra or {})}
-    (tmp / "checkpoint.json").write_text(json.dumps(meta, indent=1, default=str))
+    (tmp / "checkpoint.json").write_text(json.dumps(meta, indent=1, default=str), encoding="utf-8")
     if dest.exists():
         shutil.rmtree(dest)
     tmp.rename(dest)
@@ -217,7 +217,7 @@ def find_checkpoint(path: str | Path) -> Path:
     if (path / "checkpoint.json").exists():
         return path
     found = sorted((p for p in (path / "checkpoints").glob("cp*") if (p / "checkpoint.json").exists()),
-                   key=lambda p: json.loads((p / "checkpoint.json").read_text())["last_event_id"])
+                   key=lambda p: json.loads((p / "checkpoint.json").read_text(encoding="utf-8"))["last_event_id"])
     if not found:
         raise FileNotFoundError(f"no save point in {path}")
     return found[-1]
@@ -247,7 +247,7 @@ def restore_checkpoint(checkpoint: str | Path, work: str | Path, *,
     file changed and is not in `accept_changed` (use "all" to accept any).
     """
     cp = find_checkpoint(checkpoint)
-    meta = json.loads((cp / "checkpoint.json").read_text())
+    meta = json.loads((cp / "checkpoint.json").read_text(encoding="utf-8"))
     if meta.get("version") != VERSION:
         raise RuntimeError(f"save point version {meta.get('version')} is not supported")
     changed = changed_files(meta["guarded"], guarded_fingerprint())
@@ -270,7 +270,7 @@ def restore_checkpoint(checkpoint: str | Path, work: str | Path, *,
                    meta.get("timeline_bytes", 0), meta["last_event_id"])
     resumed = {"checkpoint": str(cp.resolve()), "changed_accepted": changed, **{
         k: meta.get(k) for k in ("workspace", "last_event_id", "saved_at", "git_commit", "label")}}
-    (work / "resumed_from.json").write_text(json.dumps(resumed, indent=1))
+    (work / "resumed_from.json").write_text(json.dumps(resumed, indent=1), encoding="utf-8")
     return {**meta, "resumed": resumed, "state_path": work / "lab_state.pkl",
             "photo_root": photo_root, "changed": changed}
 

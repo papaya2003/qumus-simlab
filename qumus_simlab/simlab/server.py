@@ -409,7 +409,6 @@ def _memory_watch(folder: Path) -> None:
     <db folder>/memwatch-*.txt every 2 minutes. Diagnosis only; off by default
     (tracing slows the lab, so it starts only above the threshold)."""
     import os
-    import resource
     import threading
     import tracemalloc
 
@@ -418,6 +417,11 @@ def _memory_watch(folder: Path) -> None:
     except ValueError:
         return
     if limit_gb <= 0:
+        return
+    try:
+        import resource  # POSIX only; this diagnosis is not available on Windows
+    except ImportError:
+        print("QUMUS_SIMLAB_MEMWATCH needs the POSIX resource module; ignored here", flush=True)
         return
 
     def rss_gb() -> float:
@@ -428,7 +432,7 @@ def _memory_watch(folder: Path) -> None:
         while rss_gb() < limit_gb:
             time.sleep(MEMWATCH_EVERY_S / 4)
         tracemalloc.start(12)
-        (folder / "memwatch-started.txt").write_text(f"{time.strftime('%H:%M:%S')} max rss {rss_gb():.2f} GB")
+        (folder / "memwatch-started.txt").write_text(f"{time.strftime('%H:%M:%S')} max rss {rss_gb():.2f} GB", encoding="utf-8")
         while True:
             time.sleep(MEMWATCH_EVERY_S)
             current, peak = tracemalloc.get_traced_memory()
@@ -438,7 +442,7 @@ def _memory_watch(folder: Path) -> None:
             for stat in snap.statistics("traceback")[:15]:
                 lines.append(f"\n{stat.size/2**20:.1f} MB in {stat.count} blocks")
                 lines += [f"    {line}" for line in stat.traceback.format()[-12:]]
-            (folder / f"memwatch-{time.strftime('%H%M%S')}.txt").write_text("\n".join(lines))
+            (folder / f"memwatch-{time.strftime('%H%M%S')}.txt").write_text("\n".join(lines), encoding="utf-8")
 
     threading.Thread(target=loop, name="qumus-simlab-memwatch", daemon=True).start()
 

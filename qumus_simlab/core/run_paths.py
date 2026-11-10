@@ -16,7 +16,7 @@ def _moves() -> list[tuple[Path, Path]]:
     manifest = RUNS_ROOT / "layout.json"
     if not manifest.exists():
         return []
-    data = json.loads(manifest.read_text())
+    data = json.loads(manifest.read_text(encoding="utf-8"))
     if data.get("version") != 1:
         raise ValueError("Unsupported private run layout; restore runs/layout.json")
     origin = Path(data["original_root"])

@@ -211,7 +211,7 @@ class LabRecords:
         sidecar = f.with_suffix(f.suffix + ".json")
         if sidecar.is_file():
             try:
-                meta.update(json.loads(sidecar.read_text()))
+                meta.update(json.loads(sidecar.read_text(encoding="utf-8")))
             except (OSError, ValueError):
                 pass
         try:
