@@ -433,7 +433,7 @@ class LabRecords:
                 return {k: walk(v, old.get(k), f"{where}.{k}" if where else k)
                         for k, v in new.items()}
             if isinstance(new, list) and isinstance(old, list) and len(new) == len(old):
-                return [walk(v, o, f"{where}[{i}]") for i, (v, o) in enumerate(zip(new, old))]
+                return [walk(v, o, f"{where}[{i}]") for i, (v, o) in enumerate(zip(new, old, strict=True))]
             if self._foreign_path(new) and isinstance(old, str) and self.image_id(old) is not None:
                 fixed.append(where)
                 return old
