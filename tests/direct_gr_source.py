@@ -150,7 +150,7 @@ def build_direct_gr_source(s, intent: dict, folder: Path, *, preserved_chip_ids=
     }
 
     def save():
-        (folder / "source-policy-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+        (folder / "source-policy-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
     def submit(flow, params):
         remaining = deadline - monotonic()

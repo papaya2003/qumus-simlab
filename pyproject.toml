@@ -49,5 +49,10 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP"]
+select = ["E", "F", "I", "B", "UP", "PLW1514"]
 ignore = ["E501"]
+# PLW1514 (open/read_text/write_text without encoding=) is a preview rule; enable
+# preview only for rules selected by their full code. Windows defaults to a locale
+# code page (GBK on the lab PC), so every text file must say utf-8.
+preview = true
+explicit-preview-rules = true

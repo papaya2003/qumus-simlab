@@ -20,7 +20,7 @@ def load_yaml(name: str) -> dict[str, Any]:
     path = config_dir() / name
     if not path.exists():
         path = DEFAULT_DIR / name
-    with path.open() as f:
+    with path.open(encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 

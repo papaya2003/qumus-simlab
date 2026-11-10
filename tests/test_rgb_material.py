@@ -24,7 +24,7 @@ from qumus_simlab.perception.rgb_material import (
 )
 from qumus_simlab.records.recognition import validate_recognition_chain
 
-FIXTURE = json.loads((Path(__file__).parent/"fixtures/v1_rgb_parity.json").read_text())
+FIXTURE = json.loads((Path(__file__).parent/"fixtures/v1_rgb_parity.json").read_text(encoding="utf-8"))
 CAL = {"source": "declared_unit_calibration", "u_axis": "+world_x", "v_axis": "-world_y",
        "mm_per_pixel": [.002, .003], "image_size_px": [480, 320]}
 
