@@ -568,7 +568,7 @@ class DeviceDesignV1(DeviceDesignSpec):
 
     @model_validator(mode="after")
     def _digest(self):
-        if geometry_digest(self.model_dump(mode="json", exclude={"canonical_digest"})) != self.canonical_digest:
+        if geometry_digest(portable(self.model_dump(mode="json", exclude={"canonical_digest"}))) != self.canonical_digest:
             raise ValueError("device design canonical digest changed")
         return self
 
@@ -688,7 +688,7 @@ def screen_design_pose_window(design: DeviceDesignSpec | dict, *, verification: 
         raise ValueError("frozen design pose window differs from the current verification configuration")
     if any(isinstance(source, RegionDesignSource) for source in parsed.sources):
         return _screen_region_pose_window(parsed, policy)
-    spec_sha = geometry_digest(parsed.model_dump(mode="json", exclude={"artifact", "canonical_digest"}))
+    spec_sha = geometry_digest(portable(parsed.model_dump(mode="json", exclude={"artifact", "canonical_digest"})))
     placed = [source.placed_outline() for source in parsed.sources]
     width, height = parsed.target.size_mm
     chip = rectangle(width, height, (width/2, height/2))
@@ -797,7 +797,7 @@ def _screen_region_pose_window(parsed, policy):
     failures += ["chip_fit:"+source.flake_id for source in sources if source.chip_headroom_mm < 0]
     failures += ["contact_containment:"+name for name in failed]
     return DesignPoseWindowReport(status="fail" if failures else "pass",
-        spec_sha256=geometry_digest(parsed.model_dump(mode="json", exclude={"artifact", "canonical_digest"})),
+        spec_sha256=geometry_digest(portable(parsed.model_dump(mode="json", exclude={"artifact", "canonical_digest"}))),
         policy=policy, sources=tuple(sources), hbn_clearance_mm=clearance,
         hbn_required_clearance_mm=required, hbn_headroom_mm=clearance-required,
         contacts=tuple(contacts), failed_contacts=tuple(failed), failures=tuple(failures))
@@ -1127,10 +1127,54 @@ def _imported_layout_payload(spec):
         "viewport_box_um": [min(xs)-margin, min(ys)-margin, max(xs)+margin, max(ys)+margin]}
 
 
+#: folders whose files keep their name relative to the folder in every process:
+#: the brain and the laboratory hold the same pictures, designs and targets in
+#: their own run folders (contract v1: the brain mirrors the lab's records)
+PORTABLE_FOLDERS = ("images", "designs", "targets")
+
+
+def portable(value: Any) -> Any:
+    """`value` with each absolute file path under one of PORTABLE_FOLDERS written
+    as "<folder>:<path inside it>": digests and equality checks of a design then
+    agree between the brain's and the laboratory's copies of the same files.
+    The files themselves stay bound by their sha256 fields."""
+    if isinstance(value, str):
+        text = value.replace("\\", "/")
+        if text.startswith("qumus-image:"):  # a picture the laboratory names by its id
+            return "images:"+text[len("qumus-image:"):]
+        if text.startswith("/") or text[1:3] == ":/":
+            parts = text.split("/")
+            for i in range(len(parts)-2, -1, -1):
+                if parts[i] in PORTABLE_FOLDERS:
+                    return parts[i]+":"+"/".join(parts[i+1:])
+        return value
+    if isinstance(value, dict):
+        return {key: portable(item) for key, item in value.items()}
+    if isinstance(value, list | tuple):
+        return [portable(item) for item in value]
+    return value
+
+
+def _adopt_design_directory(artifact_path: str, directory: Path) -> None:
+    """Copy a design made by the other process on this computer into this side's
+    own generated directory (files are then checked against their sha256)."""
+    import shutil
+
+    source = Path(artifact_path).parent
+    if directory.exists() or not source.is_dir() or source.name != directory.name or source.is_symlink():
+        return
+    directory.parent.mkdir(parents=True, exist_ok=True)
+    partial = directory.with_name(directory.name+".partial")
+    if partial.exists():
+        shutil.rmtree(partial)
+    shutil.copytree(source, partial, symlinks=False)
+    partial.rename(directory)
+
+
 def bind_artifact(spec: DeviceDesignSpec,
                   artifact: DesignArtifact | KLayoutMCPArtifact | KLayoutPythonArtifact) -> DeviceDesignV1:
     body = {**spec.model_dump(mode="json"), "artifact": artifact.model_dump(mode="json")}
-    return DeviceDesignV1(**body, canonical_digest=geometry_digest(body))
+    return DeviceDesignV1(**body, canonical_digest=geometry_digest(portable(body)))
 
 
 def validate_design_current(store, project_id: str, record: DeviceDesignV1 | dict | None = None,
@@ -1139,11 +1183,11 @@ def validate_design_current(store, project_id: str, record: DeviceDesignV1 | dic
     state = (store.get_project(project_id) or {}).get("state", {})
     saved = state.get("device_design")
     design = DeviceDesignV1.model_validate(record if record is not None else saved)
-    if saved != design.model_dump(mode="json") or not state.get("design_accepted"):
+    if portable(saved) != portable(design.model_dump(mode="json")) or not state.get("design_accepted"):
         raise ValueError("design is not the current accepted revision")
     current = build_design_spec(store, project_id, [s.placement for s in design.sources],
         design.contact_overlap_um, design_id=design.design_id, revision=design.revision)
-    if current.model_dump(mode="json") != design.model_dump(mode="json", exclude={"artifact", "canonical_digest"}):
+    if portable(current.model_dump(mode="json")) != portable(design.model_dump(mode="json", exclude={"artifact", "canonical_digest"})):
         raise ValueError("design sources, guidance, target or provenance changed")
     return validate_design_artifact(store, design, verify_bytes=verify_artifact)
 
@@ -1161,7 +1205,10 @@ def validate_design_artifact(store, record: DeviceDesignV1 | dict, *, verify_byt
     if isinstance(design.target, ImportedHallBarTarget):
         validate_imported_target_files(store, design.target)
     expected = design_directory(store, design.design_id) / "device.gds"
-    if Path(design.artifact.path).is_symlink() or Path(design.artifact.path).resolve() != expected.resolve():
+    if portable(design.artifact.path) != f"designs:{design.design_id}/device.gds":
+        raise ValueError("artifact is outside its generated run design directory")
+    _adopt_design_directory(design.artifact.path, expected.parent)
+    if expected.is_symlink():
         raise ValueError("artifact is outside its generated run design directory")
     if design.artifact.geometry_sha256 != geometry_digest(layout_payload(design)):
         raise ValueError("artifact geometry digest changed")
