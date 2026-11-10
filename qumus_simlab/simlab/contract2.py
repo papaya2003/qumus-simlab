@@ -19,7 +19,8 @@ Notes for the sim lab:
 - Windows with heaters say `on_expiry: stop_motion` and `orphan_timeout_s`: a heater set by
   `heat` always switches itself off after its mandatory `timeout_s` (at most 3600 s).
 - Jobs (`job: true`) finish their command when queued; `deadline_s` then bounds the job: when it
-  passes, the adapter cancels the job (it stops at its next safe point).
+  passes, the adapter cancels the job (it stops at its next safe point). For jobs the default is
+  the maximum (48 h), so a caller that sends no deadline is never cut short by a tighter one.
 - The records feed stays at `/api/records` (v1 shape, sim sample ids). The contract 2 `records`
   profile with brain-issued sample ids comes with the brain migration, so it is not listed yet.
 """
@@ -52,7 +53,8 @@ STATUS = {"bad_request": 400, "unknown_action": 400, "bad_params": 400, "local_o
 #: param name ending -> contract 2 unit
 UNIT_SUFFIXES = (("_c", "C"), ("_s", "s"), ("_mm", "mm"), ("mm", "mm"), ("_um", "um"),
                  ("_deg", "deg"), ("_sccm", "sccm"), ("_percent", "percent"))
-JOB_DEADLINE_S = (6 * 3600.0, 48 * 3600.0)
+# jobs: the default is the maximum, so a job without deadline_s is only bounded by 48 h
+JOB_DEADLINE_S = (48 * 3600.0, 48 * 3600.0)
 MOTION_DEADLINE_S = (600.0, 3600.0)
 HEAT_DEADLINE_S = (3600.0, 3600.0)
 JOB_STATE = {"queued": "queued", "running": "running", "succeeded": "succeeded", "failed": "failed",
