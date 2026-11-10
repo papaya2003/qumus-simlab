@@ -293,7 +293,9 @@ class SimModule:
                     "removed_samples": {"type": "array"},
                     "reservations": {"type": "array"}, "instructions": {"type": "array"}}},
                 description="[Q] The agent's own records the flows read (project state, "
-                "samples it edited, reservations, UI instructions); upserted as given."),
+                "samples it edited, reservations, UI instructions); upserted as given, except "
+                "that a stale placement (location, pose_on_stage, corner_stage_xy, "
+                "rotation_deg) keeps the lab's (docs/interface.md)."),
             Action("job_status", status, any_client=True,
                    params=_schema({"run_id": {"type": "string"}}, ["run_id"]),
                    description="[Q] One job's status, steps, result and error (any module's job)."),

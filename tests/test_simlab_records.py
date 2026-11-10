@@ -102,6 +102,55 @@ def test_put_records_upserts_and_echoes_without_lab_events(lab):
     assert bad.status_code == 422
 
 
+def test_put_records_keeps_the_labs_placement_against_a_stale_copy(lab):
+    side, _, records, _ = lab
+    st = side.store
+    st.upsert_sample("chip_g", "chip", location="slot_3",
+                     props={"size_mm": [10, 8], "rotation_deg": 0.1,
+                            "pose_on_stage": {"x": 1.0, "y": 2.0},
+                            "corner_stage_xy": [5.0, 6.0]})
+    stale = st.get_sample("chip_g")  # the brain's copy from before the lab moved the chip
+    st.upsert_sample("chip_g", "chip", location="transfer_stage",
+                     props={"rotation_deg": 0.4046, "pose_on_stage": {"x": 3.0, "y": 4.0},
+                            "corner_stage_xy": [7.0, 8.0]})
+    # the brain edits a non-placement prop on its stale copy and pushes the whole row
+    stale["props"]["note"] = "veto flake 3"
+    receipt = records.put({"samples": [stale]})
+    now = st.get_sample("chip_g")
+    assert now["location"] == "transfer_stage"
+    assert now["props"]["pose_on_stage"] == {"x": 3.0, "y": 4.0}
+    assert now["props"]["corner_stage_xy"] == [7.0, 8.0]
+    assert now["props"]["rotation_deg"] == 0.4046
+    assert now["props"]["note"] == "veto flake 3"  # the brain's own edit is taken
+    assert sorted(receipt["placement_kept"]["chip_g"]) == sorted(
+        ["location", "pose_on_stage", "corner_stage_xy", "rotation_deg"])
+    # missing or null placement props in the pushed row keep the lab's too
+    row = st.get_sample("chip_g")
+    row["props"].pop("pose_on_stage")
+    row["props"]["corner_stage_xy"] = None
+    records.put({"samples": [row]})
+    assert st.get_sample("chip_g")["props"]["pose_on_stage"] == {"x": 3.0, "y": 4.0}
+    assert st.get_sample("chip_g")["props"]["corner_stage_xy"] == [7.0, 8.0]
+    # a value the sample never had is the brain's own measurement: taken
+    row = st.get_sample("chip_g")
+    row["props"]["rotation_deg"] = 0.3999
+    assert records.put({"samples": [row]})["placement_kept"] == {}
+    assert st.get_sample("chip_g")["props"]["rotation_deg"] == 0.3999
+    # ...and once replaced, pushing the earlier one back is stale again
+    row["props"]["rotation_deg"] = 0.4046
+    assert records.put({"samples": [row]})["placement_kept"] == {"chip_g": ["rotation_deg"]}
+    assert st.get_sample("chip_g")["props"]["rotation_deg"] == 0.3999
+    # explicit hand-over: placement taken as given even if the chip was there before
+    row = st.get_sample("chip_g")
+    row.update(location="slot_3", placement_from_brain=True)
+    records.put({"samples": [row]})
+    assert st.get_sample("chip_g")["location"] == "slot_3"
+    # a new sample is the brain's as given
+    records.put({"samples": [{"id": "chip_new", "kind": "chip", "location": "slot_9",
+                              "props": {"rotation_deg": 1.0}}]})
+    assert st.get_sample("chip_new")["location"] == "slot_9"
+
+
 def test_images_are_ids_in_rows_and_served_with_meta(lab):
     side, _, records, clients = lab
     c = clients["stacking"]

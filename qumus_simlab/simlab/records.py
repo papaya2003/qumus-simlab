@@ -20,6 +20,13 @@ store; these three pieces are the only way records cross between them:
     given (last write wins); no lab events are emitted for them, but the
     changed rows do come back through the feed (harmless echo). Strings
     ``"qumus-image:<id>"`` are turned back into the lab's own file paths.
+    One exception, the placement guard: the lab owns where a sample is
+    (``location`` and the props in ``PLACEMENT_PROPS``). A pushed value that
+    the sample held EARLIER but not now (a stale copy, e.g. from a save point)
+    or a placement prop missing from the pushed row keeps the lab's current
+    value; a value the sample never had (the brain's own measurement) is taken.
+    ``"placement_from_brain": true`` on a sample row takes its placement as
+    given (e.g. a chip carried back by hand). The receipt lists what was kept.
 
 ``GET /api/images/<image_id>`` (+ ``/meta``)
     The picture bytes. An image id is the picture's path relative to the
@@ -65,6 +72,30 @@ CREATE TRIGGER IF NOT EXISTS cl_event_i AFTER INSERT ON event
     BEGIN INSERT INTO change_log (tbl, key) VALUES ('event', CAST(NEW.id AS TEXT)); END;
 """
 
+#: props of a sample that say where it physically is; the lab owns them
+PLACEMENT_PROPS = ("pose_on_stage", "corner_stage_xy", "rotation_deg")
+
+#: every placement a sample has held (stale-copy detection for put_records)
+PLACEMENT_SQL = """
+CREATE TABLE IF NOT EXISTS placement_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, sample_id TEXT NOT NULL, location TEXT,
+    pose_on_stage TEXT, corner_stage_xy TEXT, rotation_deg TEXT
+);
+CREATE INDEX IF NOT EXISTS placement_history_sample ON placement_history (sample_id);
+CREATE TRIGGER IF NOT EXISTS ph_sample_i AFTER INSERT ON sample
+    BEGIN INSERT INTO placement_history (sample_id, location, pose_on_stage, corner_stage_xy,
+        rotation_deg) VALUES (NEW.id, NEW.location, NEW.props_json -> '$.pose_on_stage',
+        NEW.props_json -> '$.corner_stage_xy', NEW.props_json -> '$.rotation_deg'); END;
+CREATE TRIGGER IF NOT EXISTS ph_sample_u AFTER UPDATE ON sample
+    WHEN NEW.location IS NOT OLD.location
+      OR (NEW.props_json -> '$.pose_on_stage') IS NOT (OLD.props_json -> '$.pose_on_stage')
+      OR (NEW.props_json -> '$.corner_stage_xy') IS NOT (OLD.props_json -> '$.corner_stage_xy')
+      OR (NEW.props_json -> '$.rotation_deg') IS NOT (OLD.props_json -> '$.rotation_deg')
+    BEGIN INSERT INTO placement_history (sample_id, location, pose_on_stage, corner_stage_xy,
+        rotation_deg) VALUES (NEW.id, NEW.location, NEW.props_json -> '$.pose_on_stage',
+        NEW.props_json -> '$.corner_stage_xy', NEW.props_json -> '$.rotation_deg'); END;
+"""
+
 TABLES = ("sample", "reservation", "run", "step", "event")
 IMAGE_PREFIX = "qumus-image:"
 MAX_PAGE = 2000
@@ -76,8 +107,15 @@ def install_change_log(store: Any) -> None:
     with store._transaction():
         fresh = store._x("SELECT name FROM sqlite_master WHERE type='table' "
                          "AND name='change_log'").fetchone() is None
-        for stmt in _statements(CHANGE_LOG_SQL):
+        no_history = store._x("SELECT name FROM sqlite_master WHERE type='table' "
+                              "AND name='placement_history'").fetchone() is None
+        for stmt in _statements(CHANGE_LOG_SQL + PLACEMENT_SQL):
             store._x(stmt)
+        if no_history:  # a store from before the guard (older save point): start from now
+            store._x("INSERT INTO placement_history (sample_id, location, pose_on_stage, "
+                     "corner_stage_xy, rotation_deg) SELECT id, location, "
+                     "props_json -> '$.pose_on_stage', props_json -> '$.corner_stage_xy', "
+                     "props_json -> '$.rotation_deg' FROM sample")
         if store.get_meta("lab_id") is None:
             import uuid
 
@@ -91,6 +129,14 @@ def install_change_log(store: Any) -> None:
                      "SELECT 'step', run_id || ':' || seq FROM step")
             store._x("INSERT INTO change_log (tbl, key) "
                      "SELECT 'event', CAST(id AS TEXT) FROM event ORDER BY id")
+
+
+def _loads(text: str | None) -> Any:
+    return None if text is None else json.loads(text)
+
+
+def _same(a: Any, b: Any) -> bool:
+    return json.dumps(a, sort_keys=True, default=str) == json.dumps(b, sort_keys=True, default=str)
 
 
 def _statements(sql: str) -> list[str]:
@@ -279,10 +325,12 @@ class LabRecords:
                       "state_json=excluded.state_json",
                       (p["id"], str(p.get("name") or p["id"]), now, now,
                        json.dumps(p.get("state") or {}, default=str)))
+            kept: dict[str, list[str]] = {}
             for s in samples:
                 if not isinstance(s, dict) or not isinstance(s.get("id"), str) \
                         or not isinstance(s.get("kind"), str):
                     raise ValueError("each sample needs 'id' and 'kind'")
+                s = self._guard_placement(s, kept)
                 st._x("INSERT INTO sample (id, kind, location, status, props_json, updated_at) "
                       "VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET kind=excluded.kind, "
                       "location=excluded.location, status=excluded.status, "
@@ -314,4 +362,45 @@ class LabRecords:
                        i.get("kind", "message"), i.get("text", ""), i.get("status", "pending"),
                        i.get("note")))
         return {"projects": len(projects), "samples": len(samples), "removed_samples": len(removed),
-                "reservations": len(reservations), "instructions": len(instructions)}
+                "reservations": len(reservations), "instructions": len(instructions),
+                "placement_kept": kept}
+
+    def _guard_placement(self, pushed: dict[str, Any], kept: dict[str, list[str]]) -> dict[str, Any]:
+        """Keep the lab's placement where the pushed row carries a stale one (see module doc)."""
+        if pushed.get("placement_from_brain"):
+            return pushed
+        st = self.store
+        cur = st._x("SELECT location, props_json -> '$.pose_on_stage' AS pose_on_stage, "
+                    "props_json -> '$.corner_stage_xy' AS corner_stage_xy, "
+                    "props_json -> '$.rotation_deg' AS rotation_deg FROM sample WHERE id = ?",
+                    (pushed["id"],)).fetchone()
+        if cur is None:
+            return pushed  # a new sample: the brain's as given
+        history = st._x("SELECT location, pose_on_stage, corner_stage_xy, rotation_deg "
+                        "FROM placement_history WHERE sample_id = ?", (pushed["id"],)).fetchall()
+        props = dict(pushed.get("props") or {})
+        out = dict(pushed)
+        names: list[str] = []
+        loc = pushed.get("location")
+        if loc != cur["location"] and (loc is None or any(h["location"] == loc for h in history)):
+            out["location"] = cur["location"]
+            names.append("location")
+        for key in PLACEMENT_PROPS:
+            lab_value = _loads(cur[key])
+            if props.get(key) is not None:  # missing or null: a stale row, keep the lab's
+                value = props[key]
+                if _same(value, lab_value):
+                    continue
+                if not any(h[key] is not None and _same(value, _loads(h[key])) for h in history):
+                    continue  # a value the lab never had: the brain's own measurement
+            elif cur[key] is None or lab_value is None:
+                continue
+            if cur[key] is None:
+                props.pop(key, None)
+            else:
+                props[key] = lab_value
+            names.append(key)
+        if names:
+            out["props"] = props
+            kept[pushed["id"]] = names
+        return out

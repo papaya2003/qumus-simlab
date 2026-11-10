@@ -64,6 +64,22 @@ Rows are upserted exactly as given (last write wins); `"qumus-image:<id>"` strin
 the lab's own paths again. No lab events are emitted for them; the changed rows echo back
 through the feed. `project` may be one object or a list.
 
+**Placement guard (one exception to "as given").** The lab owns where a sample physically
+is: its `location` and the props `pose_on_stage`, `corner_stage_xy`, `rotation_deg`. For a
+sample the lab already has, each of these in the pushed row is checked against every value
+that sample has held:
+
+- equal to the lab's current value: nothing to do;
+- a value the sample held EARLIER but not now (a stale copy, e.g. the brain's row from
+  before a lab move or from a save point), or missing / `null`: the lab keeps its current value;
+- a value the sample never had (the brain's own measurement, e.g. a brain-side rotation
+  check): taken.
+
+`"placement_from_brain": true` on a sample row takes its placement as given (e.g. a chip
+carried back by hand to where it was before). The other fields of the row are always taken.
+The command result carries `"placement_kept": {sample_id: [field, ...]}` for what the lab
+kept.
+
 ## Jobs
 
 - A whole-job command is marked `"job": true` in `describe().commands`; its params are the
