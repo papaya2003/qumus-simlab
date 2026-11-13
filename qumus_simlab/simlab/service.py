@@ -140,6 +140,10 @@ class ContractService:
         self.actions = {a.name: a for a in actions}
         self.devices = devices or {}
         self.lease_s, self.client_header, self.wall = lease_s, client_header, wall
+        #: lease expiry and stop waits: monotonic, so an NTP step or a laptop
+        #: sleep/wake neither lapses a live lease nor keeps a dead one (an injected
+        #: test clock drives both)
+        self.clock = time.monotonic if wall is time.time else wall
         self.worker_prefix = worker_prefix
         self._read_devices = read_devices or (lambda: {})
         self._on_stop = on_stop or (lambda: True)
@@ -182,7 +186,7 @@ class ContractService:
         lease = self._lease
         if lease is None:
             return None
-        return {"holder": lease.holder, "remaining_s": round(max(0.0, lease.expires - self.wall()), 3)}
+        return {"holder": lease.holder, "remaining_s": round(max(0.0, lease.expires - self.clock()), 3)}
 
     def _motion_running(self) -> bool:
         return self._worker is not None and self._worker.is_alive()
@@ -209,7 +213,7 @@ class ContractService:
     # -- lease ----------------------------------------------------------------
     def _lease_valid(self) -> _Lease | None:
         lease = self._lease
-        return lease if lease is not None and lease.expires > self.wall() else None
+        return lease if lease is not None and lease.expires > self.clock() else None
 
     def heartbeat(self, client: str) -> dict[str, Any]:
         """Take the lease when it is free (or already ours) and renew it."""
@@ -219,7 +223,7 @@ class ContractService:
                 raise CommandRefused(409, f"lease held by {lease.holder}")
             if lease is None:
                 self.emit("info", "lease taken", client=client)
-            self._lease = _Lease(client, self.wall() + self.lease_s)
+            self._lease = _Lease(client, self.clock() + self.lease_s)
             return {"lease": self._lease_view()}
 
     def renew(self, client: str) -> dict[str, Any]:
@@ -227,7 +231,7 @@ class ContractService:
             lease = self._lease_valid()
             if lease is None or lease.holder != client:
                 raise CommandRefused(409, "no lease to renew; send a heartbeat first")
-            lease.expires = self.wall() + self.lease_s
+            lease.expires = self.clock() + self.lease_s
             return {"lease": self._lease_view()}
 
     def release(self, client: str) -> dict[str, Any]:
@@ -242,7 +246,7 @@ class ContractService:
         """Expire the lease; motion without a living lease is stopped."""
         with self._lock:
             lease = self._lease
-            if lease is None or lease.expires > self.wall():
+            if lease is None or lease.expires > self.clock():
                 return
             self._lease = None
             moving = self.busy()
@@ -393,8 +397,8 @@ class ContractService:
         except Exception as e:  # noqa: BLE001 - report, the stop still counts as sent
             hook_ok = False
             self.emit("error", "stop hook failed", error=str(e))
-        deadline = self.wall() + max(0.0, wait_s)
-        while self._motion_running() and self.wall() < deadline:
+        deadline = self.clock() + max(0.0, wait_s)
+        while self._motion_running() and self.clock() < deadline:
             time.sleep(0.02)
         idle = not self._motion_running()
         status = "unconfirmed" if not hook_ok else "confirmed" if idle else "pending"

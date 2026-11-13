@@ -664,6 +664,11 @@ class RunStore:
 
     def upsert_sample(self, sample_id: str, kind: str, *, location: str | None = None,
                       status: str | None = None, props: dict[str, Any] | None = None) -> None:
+        with self._lock:  # read-merge-write as one: concurrent updates keep each other's props
+            self._upsert_sample(sample_id, kind, location=location, status=status, props=props)
+
+    def _upsert_sample(self, sample_id: str, kind: str, *, location: str | None,
+                       status: str | None, props: dict[str, Any] | None) -> None:
         old = self.get_sample(sample_id)
         merged = {**(old["props"] if old else {}), **(props or {})}
         self._x("INSERT INTO sample (id, kind, location, status, props_json, updated_at) "

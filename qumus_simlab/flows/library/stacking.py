@@ -61,6 +61,7 @@ from qumus_simlab.flows.step import (
     Verdict,
 )
 from qumus_simlab.flows.workflow import Assembly, Molecule, WorkflowMismatch
+from qumus_simlab.perception.rgb_material import RGBRecognitionError
 from qumus_simlab.perception.tracking import (
     PixelCalibration,
     RegistrationConfig,
@@ -1275,7 +1276,12 @@ def _target_view(ctx: FlowContext, chip_id: str, target: tuple[float, float],
             raise NeedsHumanError("Target endpoint held capture context changed")
         frames.append(_frame_record(frame))
         for material in materials:
-            seen = analyzer(ctx).find_flakes(frame, material)
+            try:
+                seen = analyzer(ctx).find_flakes(frame, material)
+            except RGBRecognitionError as exc:
+                # the release endpoint turns this into an UNCLEAR review
+                raise NeedsHumanError(f"Target material appearance is optically unobservable: {exc}",
+                                      optical_observation_unavailable=True) from exc
             counts[material] = max(counts[material], sum(math.hypot(d.dx_mm, d.dy_mm)
                 <= ctx.verification["drop"]["stack_radius_um"]/1000 for d in seen))
             if direct or designed:
@@ -3385,13 +3391,19 @@ def _chip_near_centre(ctx: FlowContext, material: str, radius_mm: float,
             frames.append(frame)
         if images is not None and not images and (path := frame.saved_path()):
             images.append(path)
-        for d in _centred_flakes(ctx, frame, material):
-            centre = source_reference["target_offset_mm"]
-            if math.hypot(d.dx_mm-centre[0], d.dy_mm-centre[1]) > radius_mm:
-                continue
-            if not any(math.hypot(d.dx_mm - o.dx_mm, d.dy_mm - o.dy_mm) < SAME_FLAKE_MM
-                       for o in found):
-                found.append(d)
+        try:
+            for d in _centred_flakes(ctx, frame, material):
+                centre = source_reference["target_offset_mm"]
+                if math.hypot(d.dx_mm-centre[0], d.dy_mm-centre[1]) > radius_mm:
+                    continue
+                if not any(math.hypot(d.dx_mm - o.dx_mm, d.dy_mm - o.dy_mm) < SAME_FLAKE_MM
+                           for o in found):
+                    found.append(d)
+        except RGBRecognitionError as exc:
+            # e.g. a held stamp tints the whole view so no native substrate is
+            # left to equalize against: the absence is unobservable, not proven
+            raise NeedsHumanError(f"Source absence is optically unobservable: {exc}",
+                                  optical_observation_unavailable=True) from exc
     return found
 
 

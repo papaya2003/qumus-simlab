@@ -41,6 +41,10 @@ def with_stamp_discovery(config: dict[str, Any]) -> dict[str, Any]:
                  dome_radius_mm=12., cap_support_radius_mm=5., physics_profile=PHYSICS_PROFILE,
                  discovery=discovery_policy())
     config["microscope"]["best_focus_sigma"] = legacy["microscope"]["best_focus_sigma"]
+    # The discovery claim (records/discovery.py) declares the 10 um/mm focus tilt
+    # this stamp was characterised with; the flat-chip Hall-bar default (0, Jialei
+    # 2026-11-05) came later and would make the declaration false.
+    config["microscope"]["focus_tilt_per_mm"] = legacy["microscope"]["focus_tilt_per_mm"]
     return config
 
 

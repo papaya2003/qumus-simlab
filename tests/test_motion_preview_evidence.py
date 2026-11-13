@@ -114,9 +114,9 @@ def test_swept_clearance_uses_actual_translated_integrated_workcell():
     assert lab.bench["microscope"]["center"]["x"] != gate.limits.geometry.objective_xy[0]
     holder = lab.world.manip
     over = lab.bench["transfer_arm"]["over_stage"]
-    holder.x, holder.y, holder.z = over["x"], over["y"], 6.5
-    # At the translated objective, -3 mm focus would sweep its housing into
-    # the stamp. Base-file coordinates would incorrectly miss the collision.
+    holder.x, holder.y, holder.z = over["x"], over["y"], 8.0
+    # At the translated objective, -3 mm focus would sweep its housing (bottom
+    # 12 - 3 = 9, limits.yaml) into the stamp (top 8 + 1). Base-file coordinates would incorrectly miss the collision.
     with pytest.raises(SafetyViolation, match="objective/stamp"):
         gate.microscope("microscope").set_focus(-3)
     assert lab.devices.get("microscope").get_focus() == 0

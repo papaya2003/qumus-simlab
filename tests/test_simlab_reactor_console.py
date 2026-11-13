@@ -177,3 +177,19 @@ def test_shapes_follow_the_real_console(lab):
     assert [e["ts_unix"] for e in events] == sorted((e["ts_unix"] for e in events), reverse=True)
     per_service = [e["seq"] for e in events if e["service"] == "robot"]
     assert per_service == sorted(per_service, reverse=True) and min(per_service) == 1
+
+
+def test_console_routes_win_over_contract2_on_the_reactor_window():
+    """The real server adds contract 2 (/{name}/api/state) to the same app: /lab/api/...
+    must still reach the Lab Console, not contract 2 with name='lab'."""
+    from qumus_simlab.simlab.contract2 import Station
+    from qumus_simlab.simlab.server import console_first
+
+    sim = SimReactorConsole(time_scale=6000.0)
+    app = FastAPI()
+    console_first(console_routes(sim), Station({}).routes)(app, lambda request: True)
+    with TestClient(app) as client:
+        state = client.get("/lab/api/state")
+        assert state.status_code == 200, state.text
+        assert "active_run" in state.json()
+        assert client.post("/lab/api/heartbeat", json={}, headers=H).status_code == 200

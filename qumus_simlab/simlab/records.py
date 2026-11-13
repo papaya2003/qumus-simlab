@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import sqlite3
 from pathlib import Path
 from typing import Any
 
@@ -106,9 +107,20 @@ MAX_PAGE = 2000
 FEED_META_VALUE_MAX = 64 * 1024
 
 
+#: the triggers below use the JSON "->" operator (SQLite 3.38, 2022)
+MIN_SQLITE = (3, 38, 0)
+
+
 def install_change_log(store: Any) -> None:
     """Create the change log and its triggers, and log the rows already there
     (a fresh lab seeds its ledger before the windows exist)."""
+    if sqlite3.sqlite_version_info < MIN_SQLITE:
+        # e.g. Ubuntu 22.04's system Python (SQLite 3.37): say so instead of a
+        # bare 'near "->": syntax error' while the lab starts
+        raise RuntimeError(
+            f"qumus-simlab needs SQLite {'.'.join(map(str, MIN_SQLITE))} or newer; this Python "
+            f"({sqlite3.sqlite_version}) is older. Use a python.org or uv Python 3.11+ "
+            "(both bundle a current SQLite).")
     with store._transaction():
         fresh = store._x("SELECT name FROM sqlite_master WHERE type='table' "
                          "AND name='change_log'").fetchone() is None
@@ -155,6 +167,11 @@ def _statements(sql: str) -> list[str]:
             buf = []
     return out
 
+
+
+def _looks_absolute(value: str) -> bool:
+    """A string that may be an absolute file path on any system (cheap pre-check)."""
+    return value[:1] in ("/", "\\") or (len(value) > 2 and value[1] == ":" and value[2] in "/\\")
 
 class LabRecords:
     """Change feed, write-back and images of one simulated lab."""
@@ -227,7 +244,10 @@ class LabRecords:
     def scrub(self, value: Any) -> Any:
         """Replace every lab image path inside a JSON value by "qumus-image:<id>"."""
         if isinstance(value, str):
-            if len(value) < 4096 and any(value.startswith(str(r)) for r in self.roots):
+            # Any absolute path (POSIX "/", Windows "C:\\" or "\\\\server"): image_id
+            # resolves it, so case, separators and symlinked prefixes (macOS
+            # /var -> /private/var, Windows c: vs C:) do not leak a lab-local path.
+            if len(value) < 4096 and self.roots and _looks_absolute(value):
                 iid = self.image_id(value)
                 if iid is not None:
                     try:

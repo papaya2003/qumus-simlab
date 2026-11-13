@@ -36,10 +36,18 @@ def context(tmp_path, monkeypatch):
                 "mm_per_pixel": [.001*scale, .002*scale], "image_size_px": [128, 96]}})
     labels = np.zeros((96, 128), dtype=np.uint16)
     labels[38:58, 54:74] = 2
-    def declared(rgb, material, *, objective, image_sha256):
+    def declared(rgb, material, *, objective, image_sha256, revisit=False, accepted_labels=None,
+                 centered=False, **_options):
+        # the policy fields segment_rgb adds for a revisit / centred capture (the
+        # analyzer's mask cache is keyed on them)
+        policy = rgb_material.material_policy(material, objective)[1]
+        if revisit:
+            policy.update(centered_revisit=True, recovery_labels=sorted(accepted_labels or ("monolayer", "bilayer")))
+        elif centered:
+            policy["centered_capture"] = True
         return rgb_material.RGBRecognition(labels.copy(), ({"label_id": 2,
             "thickness_label": "monolayer" if objective == 20 else "bulk", "area_px": int((labels == 2).sum()),
-            "centroid_px": [63.5, 47.5]},), rgb_material.material_policy(material, objective)[1], image_sha256, objective)
+            "centroid_px": [63.5, 47.5]},), policy, image_sha256, objective)
     monkeypatch.setattr(rgb_material, "segment_rgb", declared)
     ctx = SimpleNamespace(store=store, run_id=rid, clock=clock, analyzer=rgb_material.RGBMaterialAnalyzer(),
         verification={"revisit": {"refind_radius_um": 100}}, bench={"microscope": {"revisit_objectives": [20, 100]}},
@@ -48,10 +56,15 @@ def context(tmp_path, monkeypatch):
     store.close()
 
 
-def produce(ctx, frame):
+def produce(ctx, frame, stage_xy=(0., 0.)):
+    # the public stage readback the revisit step journals just before an original20 capture
+    readback = ctx.store.emit("microscope.source_stage_readback", {"version": 1, "source_chip_id": "chip",
+        "flake_id": "flake", "objective": 20, "coarse_xy": list(stage_xy), "fine_xy": [0., 0.],
+        "stage_xy": list(stage_xy)}, run_id=ctx.run_id) if frame.meta["objective"] == 20 else None
     capture = ctx.store.emit("device.command", {"device": "microscope", "command": "capture", "params": {}}, run_id=ctx.run_id)
     detection = ctx.analyzer.revisit_target(frame, "Gr")
-    return search._rgb_revisit_evidence(ctx, ctx.analyzer, frame, detection, "chip", "flake", capture), capture
+    return search._rgb_revisit_evidence(ctx, ctx.analyzer, frame, detection, "chip", "flake", capture,
+        capture_stage_xy=list(stage_xy) if readback else None, stage_readback_event_id=readback), capture
 
 
 def test_exact20_source_has_original_capture_rotation_and_immutable_masks(context):

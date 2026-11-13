@@ -245,6 +245,14 @@ class StepRunner:
             store.finish_step(rid, seq, "failed", corrections=corrections, note=e.message)
             return StepOutcome(StepStatus.NEEDS_AGENT, step.name, attempts, corrections,
                                observations, message=e.message, error=e.to_dict())
+        except Exception as e:
+            # Any other exception (a bug, an unexpected library error) still ends
+            # the step safely and on the record before the job fails with it:
+            # no step left in progress, no stamp left wherever it was.
+            self._safe(step, ctx)
+            store.finish_step(rid, seq, "failed", corrections=corrections,
+                              note=f"{type(e).__name__}: {e}")
+            raise
 
     #: transient errors (serial timeout, dropped frame) are retried with backoff (spec 5.2)
     transient_retries: int = 3
