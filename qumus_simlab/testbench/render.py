@@ -25,6 +25,7 @@ import random
 import shutil
 import struct
 import threading
+import time
 import zlib
 from array import array
 from functools import lru_cache
@@ -401,6 +402,20 @@ def _pixel_key(meta: dict[str, Any]) -> str:
     return hashlib.sha256(blob.encode()).hexdigest()
 
 
+
+def _replace(tmp: Path, path: Path, attempts: int = 20) -> None:
+    """os.replace onto a file a reader may hold open: Windows refuses that while
+    the image route streams the old picture (PermissionError), so retry briefly."""
+    for attempt in range(attempts):
+        try:
+            tmp.replace(path)
+            return
+        except PermissionError:
+            if attempt == attempts - 1:
+                tmp.unlink(missing_ok=True)
+                raise
+            time.sleep(0.01 * (attempt + 1))
+
 class _Writer:
     """Numbered image files in one directory, thread-safe."""
 
@@ -425,9 +440,11 @@ class _Writer:
             suffix = image_suffix(data)
         if fixed:
             path = self.dir / f"{prefix}_live{suffix}"
-            tmp = path.with_suffix(".tmp")
+            # one temporary file per writer thread: two previews of one camera
+            # never interleave their bytes
+            tmp = path.with_name(f"{path.stem}.{threading.get_ident()}.tmp")
             tmp.write_bytes(data)
-            tmp.replace(path)  # readers never see half a file
+            _replace(tmp, path)  # readers never see half a file
             return str(path.resolve())
         import hashlib
 
