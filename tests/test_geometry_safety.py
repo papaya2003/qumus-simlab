@@ -184,8 +184,10 @@ def test_holder_translation_rejects_intermediate_collision(rig):
 
 def test_holder_sweep_rejects_objective_with_safe_endpoints(rig):
     gate, _, stamp, scope, _ = rig
-    stamp.positions.update(x=0, y=90, z=6.5)
-    scope.focus = -3  # bottom at 7, below the stamp holder's upper envelope
+    # limits.yaml puts the objective bottom 12 mm above focus zero (#204), so at
+    # the lowest focus (-3) it is at 9: a holder at z 8 (top 9) is too close.
+    stamp.positions.update(x=0, y=90, z=8)
+    scope.focus = -3
     with pytest.raises(SafetyViolation, match="objective/stamp"):
         gate.manipulator(stamp.device_id).move_axis_to("x", 80)
     assert not stamp.commands
@@ -194,7 +196,7 @@ def test_holder_sweep_rejects_objective_with_safe_endpoints(rig):
 def test_stage_sweep_rejects_objective_when_sample_is_tall(rig):
     gate, stage, _, scope, _ = rig
     stage.pose = Pose(x=0, y=40)
-    stage.top = 8
+    stage.top = 10  # objective bottom at 12 - 2 = 10
     scope.focus = -2  # sample/objective endpoints both separated in XY
     with pytest.raises(SafetyViolation, match="objective/sample"):
         gate.stage(stage.device_id).move_to(Pose(x=0, y=100))
@@ -204,12 +206,13 @@ def test_stage_sweep_rejects_objective_when_sample_is_tall(rig):
 @pytest.mark.parametrize("obstacle", ["sample", "stamp"])
 def test_focus_stroke_checks_both_mechanical_clearances(rig, obstacle):
     gate, stage, stamp, scope, _ = rig
+    # objective bottom = 12 + focus (limits.yaml, #204)
     if obstacle == "stamp":
-        stamp.positions.update(x=40, y=90)
+        stamp.positions.update(x=40, y=90, z=8)  # stamp top 9; bottom at -3 is 9
         target = -3
     else:
         stage.pose = Pose(x=0, y=80)
-        stage.top = 8
+        stage.top = 10  # bottom at -2 is 10
         target = -2
     before = stage.pose, stage.fine, dict(stamp.positions), scope.focus
     with pytest.raises(SafetyViolation, match=f"objective/{obstacle}"):
