@@ -288,6 +288,8 @@ class FlowExecutor:
     def __init__(self, store: RunStore, gate: SafetyGate, runner: StepRunner | None = None):
         self.store, self.gate = store, gate
         self.runner = runner or StepRunner()
+        #: queued runs already reported as "waiting for devices" (said once per wait)
+        self._waiting_devices: set[str] = set()
 
     def execute(self, run_id: str, ctx: FlowContext, start_seq: int = 0,
                 restore: bool = False) -> str:
@@ -314,9 +316,14 @@ class FlowExecutor:
                                          if locks.get(device) in (None, run_id))
                 return self._pause(run_id, ctx, flow, steps, start_seq, in_progress=False)
             if not self.store.acquire_locks(flow.devices, run_id):
-                self.store.set_run_status(run_id, "queued", message="waiting for devices")
+                if run_id not in self._waiting_devices:
+                    # said once: the queue retries every poll_s, and a status row
+                    # plus event each time would flood the store and the feed
+                    self._waiting_devices.add(run_id)
+                    self.store.set_run_status(run_id, "queued", message="waiting for devices")
                 release_locks, normal_exit = False, True
                 return "queued"
+            self._waiting_devices.discard(run_id)
             self.store.set_run_status(run_id, "running")
             if restore and flow.restore_heaters_on_resume:
                 try:
@@ -1149,8 +1156,10 @@ class ThreadJobService:
         """Stop one job at its next safe point for good: it pauses like at Stop
         and is then marked cancelled (not resumable)."""
         run = self.store.get_run(run_id)
-        if run is not None and run["status"] == "paused":
-            self.store.set_run_status(run_id, "cancelled", message="cancelled while paused")
+        if run is not None and run["status"] in ("paused", "parked", "waiting_human"):
+            # no worker runs it, so nobody would see the event: end it here
+            self._abandon.discard(run_id)
+            self.store.set_run_status(run_id, "cancelled", message=f"cancelled while {run['status']}")
             return
         self._abandon.add(run_id)
         ev = self._cancel.get(run_id)

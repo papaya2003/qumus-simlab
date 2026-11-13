@@ -26,6 +26,7 @@ from __future__ import annotations
 import os
 import threading
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from qumus_simlab.core.errors import QumusError, SafetyViolation, TransientError
@@ -137,6 +138,8 @@ class SimModule:
         self.motion_delay_s = motion_delay_s
         self.flows = tuple(f for f, m in FLOW_MODULE.items() if m == module)
         self._timers: dict[str, threading.Timer] = {}
+        #: device -> the off() its pending auto-off timer will call
+        self._timer_offs: dict[str, Callable[[], None]] = {}
         kwargs: dict[str, Any] = {} if wall is None else {"wall": wall}
         # a busy simulation can delay the heartbeat reply past the 3 s contract
         # lease; QUMUS_SIMLAB_LEASE_S lengthens it for the SIM lab only
@@ -206,11 +209,21 @@ class SimModule:
         the UI's Stop) and switch off this module's heaters no job holds."""
         for rid in self.active_jobs():
             self.jobs.pause(rid)
+        pending = dict(self._timer_offs)
         for t in self._timers.values():
             t.cancel()
         self._timers.clear()
+        self._timer_offs.clear()
         locked = self.store.locks()
         ok = True
+        # a raw switch or heat command waiting for its mandatory auto-off: Stop
+        # does it now (cancelling the timer alone would leave it on for good)
+        for d, off in pending.items():
+            if d not in locked:
+                try:
+                    off()
+                except Exception:  # noqa: BLE001 - reported as an unconfirmed stop
+                    ok = False
         for d in self.device_ids:
             dev = self.lab.devices.get(d)
             if isinstance(dev, Heater) and d not in locked and dev.get_target() is not None:
@@ -336,8 +349,12 @@ class SimModule:
         except QumusError as e:
             raise ValueError(str(e)) from e
         path = frame.saved_path()
-        return {"camera": p["camera"], "image_id": path.rsplit("/", 1)[-1] if path else None,
-                "path": path, "timestamp": frame.timestamp}
+        # the id GET /api/images/<id> serves: the path below the image root, in
+        # POSIX form on every system (a Windows path has backslashes)
+        image_id = self.records.image_id(path) if path and self.records is not None else None
+        if path and image_id is None:
+            image_id = Path(path).name
+        return {"camera": p["camera"], "image_id": image_id, "path": path, "timestamp": frame.timestamp}
 
     # named points ------------------------------------------------------------
     def points(self) -> list[str]:
@@ -409,6 +426,13 @@ class SimModule:
             old.cancel()
 
         def fire() -> None:
+            if self._timers.get(device_id) is t:
+                self._timers.pop(device_id, None)
+                self._timer_offs.pop(device_id, None)
+            if device_id in self.store.locks():
+                # a job took the device after the raw command: it owns it now
+                self.service.emit("info", "auto off skipped: a job holds the device", device=device_id)
+                return
             try:
                 off()
                 self.service.emit("warn", "auto off", device=device_id, after_s=seconds)
@@ -417,6 +441,7 @@ class SimModule:
         t = threading.Timer(seconds, fire)
         t.daemon = True
         self._timers[device_id] = t
+        self._timer_offs[device_id] = off
         t.start()
 
     def _heat(self, ctx: CommandContext, p: dict[str, Any]) -> dict[str, Any]:
@@ -432,6 +457,7 @@ class SimModule:
         if _kind(self._dev(p["device"])) != "heater":
             raise ValueError(f"{p['device']} is not a heater")
         t = self._timers.pop(p["device"], None)
+        self._timer_offs.pop(p["device"], None)
         if t is not None:
             t.cancel()
         self.gate.heater(p["device"]).off()

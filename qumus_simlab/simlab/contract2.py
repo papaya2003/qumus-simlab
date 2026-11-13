@@ -243,8 +243,18 @@ class Window:
                 if self.bodies[cid] != digest:
                     raise Refusal("id_reused", f"command_id {cid} was used with another body")
                 rec = self.records[cid]
-                return 200, {"command_id": cid, "accepted_unix": rec["accepted_unix"],
-                             "seq": self.service.state()["seq"], "duplicate": True}
+                duplicate = {"command_id": cid, "accepted_unix": rec["accepted_unix"], "duplicate": True}
+            else:
+                duplicate = None
+                # Claim the id now, in the same lock as the check: a retry that
+                # arrives while this request is still being handled is a
+                # duplicate, never a second run (the record below replaces this).
+                self._remember(cid, digest, {
+                    "id": cid, "action": str(action), "client": client, "params": params,
+                    "result": None, "message": "", "accepted_unix": time.time(),
+                    "finished_unix": None, "data": {}, "boot_id": self.station.boot_id})
+        if duplicate is not None:
+            return 200, {**duplicate, "seq": self.service.state()["seq"]}
         act = self.service.actions.get(action)
         if act is None:
             return self._reject(cid, digest, client, action, params,
