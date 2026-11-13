@@ -224,6 +224,16 @@ def sim_routes(side: Any, records: Any, info: dict[str, Any] | None = None) -> A
     return add
 
 
+
+def console_first(lab_routes: Any, window_extra: Any) -> Any:
+    """The reactor window's routes: the Lab Console (/lab/...) before the contract 2
+    and v1 extras. Starlette matches routes in registration order, and contract 2's
+    /{name}/api/state, /lease and /stop would otherwise answer /lab/api/... (name="lab")."""
+    def reactor_extra(app: Any, loopback: Any) -> None:
+        lab_routes(app, loopback)
+        window_extra(app, loopback)
+    return reactor_extra
+
 class SimLabServer:
     """The three windows on their own uvicorn servers (threads) over one lab side."""
 
@@ -273,9 +283,7 @@ class SimLabServer:
             extra(app, loopback)
             self.station.routes(app, loopback)
 
-        def reactor_extra(app: Any, loopback: Any) -> None:
-            window_extra(app, loopback)
-            lab_routes(app, loopback)
+        reactor_extra = console_first(lab_routes, window_extra)
 
         listeners = [(m, self.host, self.ports[m], None) for m in self.modules]
         listeners += [(m, "127.0.0.1", p, frozenset()) for m, p in self.remote_ports.items()
@@ -480,6 +488,16 @@ def main(args: Any) -> None:
         pass
     finally:
         server.close()
-        side.jobs.shutdown(10.0) if hasattr(side.jobs, "shutdown") else None
-        side.lab.devices.all_safe_state()
-        side.store.close()
+        report = side.jobs.shutdown(10.0) if hasattr(side.jobs, "shutdown") else None
+        if report is not None and not report.get("safe_to_close_resources"):
+            print("qumus-simlab: waiting for running steps to reach their safe point ...", flush=True)
+            report = side.jobs.shutdown(60.0)
+        if report is not None and not report.get("safe_to_close_resources"):
+            # Closing the store under a running worker would lose its pause record
+            # (status, locks, held heaters). Leave it to the process exit instead.
+            print("qumus-simlab: jobs did not settle "
+                  f"({', '.join(report.get('unsettled_jobs') or []) or 'workers alive'}); "
+                  "the store is left open and the process exits", flush=True)
+        else:
+            side.lab.devices.all_safe_state()
+            side.store.close()
