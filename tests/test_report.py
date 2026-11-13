@@ -24,12 +24,10 @@ def test_every_flow_is_in_the_report_scenarios():
 
 def test_report_lists_unverifiable_steps(services):
     runs = run_scenarios(services)
-    # These two actual prepared chips cannot safely supply the declared stack.
-    # This is report prerequisite coverage, not a completed stacking experiment.
+    # The two prepared chips now supply a compatible stack and it is transferred
+    # (the missing-source case is test_report_stack_prerequisite_is_typed...).
     stack = next(row for row in runs if row["flow"] == "stack_device")
-    assert stack == {"flow": "stack_device", "run_id": None, "status": "not_run",
-        "prerequisite": "compatible_observed_stack_unavailable",
-        "reason": "No compatible observed stack; prepare additional source material before the report transfer"}
+    assert stack["status"] == "succeeded" and stack["run_id"], stack
     assert all(r["status"] == "succeeded" or
                (r["status"] == "disabled" and ("reactor" in r["flow"] or
                 r["flow"] == "prepare_material_metal" and r["reason"].startswith("abstract workflow fixture requires explicit project authorization")))
@@ -40,7 +38,7 @@ def test_report_lists_unverifiable_steps(services):
     assert massage["flows"] == ["exfoliate_chips"] and massage["count"] == 2
     text = render_markdown(items, runs)
     assert "## PressTape" in text and "Flows without registered scenarios" not in text
-    assert "`stack_device` | NOT RUN | No compatible observed stack" in text
+    assert "| `stack_device` | succeeded |" in text
     assert "Submitted flow coverage:" in text and "(incomplete)" in text
 
 

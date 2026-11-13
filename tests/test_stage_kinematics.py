@@ -231,7 +231,9 @@ def test_polling_at_fixed_clock_preserves_physics_and_both_rng_streams(tmp_path)
         lab.preview("microscope")
     assert _physical_state(lab, clock) == before
     assert len(set(live_paths)) == 1
-    assert len(set(snapshot_paths)) == 4
+    # Identical immutable snapshots share one numbered file (render.ImageStore
+    # never rewrites a numbered file and does not copy an unchanged frame).
+    assert len(set(snapshot_paths)) == 1 and not set(snapshot_paths) & set(live_paths)
     assert len({Path(p).read_bytes() for p in [*live_paths, *snapshot_paths]}) == 1
 
 
