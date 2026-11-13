@@ -28,6 +28,13 @@ def test_report_lists_unverifiable_steps(services):
     # (the missing-source case is test_report_stack_prerequisite_is_typed...).
     stack = next(row for row in runs if row["flow"] == "stack_device")
     assert stack["status"] == "succeeded" and stack["run_id"], stack
+    # v1 cannot see the source through the held stamp: without a device design
+    # too, every pickup parks the stamp before the source is inspected.
+    events = services.store.events_after(0, limit=100000, run_id=stack["run_id"])
+    parks = [e.payload["phase"] for e in events if e.kind == "stack.design_source_park"]
+    picks = {e.payload.get("name") for e in events if e.kind == "step.started"
+             and str(e.payload.get("name", "")).startswith("v1_pick_up_")}
+    assert parks and set(parks) >= picks, (parks, picks)
     assert all(r["status"] == "succeeded" or
                (r["status"] == "disabled" and ("reactor" in r["flow"] or
                 r["flow"] == "prepare_material_metal" and r["reason"].startswith("abstract workflow fixture requires explicit project authorization")))

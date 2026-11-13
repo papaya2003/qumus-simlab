@@ -127,7 +127,7 @@ EVENT_KINDS: dict[str, str] = {
                                 "wafer_focus_event_sha256, wafer_focus_event_ts, started_at, ended_at, status",
     "stack.first_contact_sampling": "phase, policy, reference_event (frozen finite approach policy)",
     "stack.design_contact_dwell": "phase, hold (Clock start, duration, completion and recipe source)",
-    "stack.design_source_park": "phase, park (actual holder pose and completion before source inspection)",
+    "stack.design_source_park": "phase, park (actual holder pose and completion before source inspection; every pickup, design or not)",
     "stack.electrode_refind": "chip_id, matched, score, angle_deg, match_center_px, shift_um, corner_stage_xy_before/after, reference_image, image (v1 20x site refind)",
     "stack.design_pickup_coverage": "design_digest, stamp_id, source_id, covered, frame, units, "
                                     "hbn_outline_mm, gr_outline_mm, source_frame, stamp_frame, scope",

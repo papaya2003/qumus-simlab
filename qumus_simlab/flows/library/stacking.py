@@ -3367,7 +3367,7 @@ def _chip_near_centre(ctx: FlowContext, material: str, radius_mm: float,
         raise NeedsHumanError("Source absence lacks its known native source-plane binding")
     _reference(source_reference)
     metadata = deepcopy(metadata)
-    if not (ctx.params.get("device_design") and not _over_stage(ctx)):
+    if _over_stage(ctx):  # only a stamp in the light path shifts the source plane
         metadata["focus_z"] += _profile(ctx)["focus_offset_mm"]
     _restore_source_plane(ctx, metadata)
     autofocus(ctx, objective, attempts=1,
@@ -3577,17 +3577,20 @@ class PickUpFlake(Step):
             _phase_capture(ctx, phase)
         _guarded_z(ctx, phase, phase["safe_z_mm"], speed=c["pickup_lift_speed_mm_s"])
         _guarded_z(ctx, phase, _ta(ctx)["safe_z"])
-        if ctx.params.get("device_design"):
-            park = ManipulatorTo("park", name=self.name+"_source_inspection_park", stamp_id=self.stamp_id)
-            park.act(ctx, None)
-            parked = park.verify(ctx)
-            if parked.verdict != Verdict.OK:
-                park.on_give_up(ctx, parked)
-                raise NeedsHumanError("Source inspection requires confirmed lateral stamp clearance", observation=parked.to_dict())
-            phase["source_inspection_park"] = {"actual_holder_pose": _pos(ctx), "completed_at": ctx.clock.now()}
-            body = {"phase": self.name, "park": phase["source_inspection_park"]}
-            event_id = ctx.store.emit("stack.design_source_park", body, run_id=ctx.run_id)
-            phase["source_inspection_park_event"] = {"event_id": event_id, "event_sha256": _digest(body)}
+        # v1 cannot see the source through the held stamp (owner, 2026-11-13):
+        # every pickup parks the stamp laterally before the source is inspected,
+        # with or without a device design. Looking through the stamp tinted the
+        # whole view and native RGB recognition failed (L6, 2026-11-11).
+        park = ManipulatorTo("park", name=self.name+"_source_inspection_park", stamp_id=self.stamp_id)
+        park.act(ctx, None)
+        parked = park.verify(ctx)
+        if parked.verdict != Verdict.OK:
+            park.on_give_up(ctx, parked)
+            raise NeedsHumanError("Source inspection requires confirmed lateral stamp clearance", observation=parked.to_dict())
+        phase["source_inspection_park"] = {"actual_holder_pose": _pos(ctx), "completed_at": ctx.clock.now()}
+        body = {"phase": self.name, "park": phase["source_inspection_park"]}
+        event_id = ctx.store.emit("stack.design_source_park", body, run_id=ctx.run_id)
+        phase["source_inspection_park_event"] = {"event_id": event_id, "event_sha256": _digest(body)}
         phase["complete"] = True
         _save_phase(ctx, phase)
 
