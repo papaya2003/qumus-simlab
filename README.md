@@ -1,5 +1,7 @@
 # qumus-simlab
 
+**Qumus v2.2 · stage 2 · simulated laboratory.** Driven by [qumus-agent](https://github.com/papaya2003/qumus-agent) (the brain) through [lab-contract](https://github.com/papaya2003/lab-contract); the real-lab counterpart is [qumus-lab](https://github.com/papaya2003/qumus-lab).
+
 The Qumus **simulated laboratory**: the v1-linked Hall-bar testbench (chips, flakes,
 stamps, microscope pictures, the whole exfoliation → search → stacking flow and the vdW
 reactor) as an independent program. It knows nothing about the AI agent. The agent
